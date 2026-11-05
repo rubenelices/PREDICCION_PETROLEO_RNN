@@ -28,7 +28,7 @@ build-backend = "poetry.core.masonry.api"
 
 
 [tool.poetry]
-package-mode = false
+packages = [{include = "oil_forecast", from = "src"}]
 
 # Torch CPU-only wheels on Linux/Windows: the default Linux wheel bundles CUDA
 # (~2 GB), which is unnecessary here and too heavy for deploying the app.
