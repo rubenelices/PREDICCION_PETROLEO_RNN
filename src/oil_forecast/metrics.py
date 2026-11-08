@@ -76,3 +76,20 @@ def diebold_mariano(e_model, e_naive, horizon: int) -> tuple[float, float]:
     dm *= correction
     p = 2 * stats.t.sf(np.abs(dm), df=n - 1)
     return float(dm), float(p)
+
+
+def evaluate_forecast(price: np.ndarray, horizon: int, origins: np.ndarray, log_return_pred) -> dict:
+    """All metrics for h-day log-return forecasts made at ``origins``.
+
+    Prices are reconstructed as P[t] * exp(prediction) and compared with the
+    real P[t+h] and with the naive forecast P[t].
+    """
+    origins = np.asarray(origins)
+    p_now, p_true = price[origins], price[origins + horizon]
+    p_pred = p_now * np.exp(np.asarray(log_return_pred))
+    out = evaluate(p_now, p_true, p_pred, naive_pred=p_now)
+    if np.any(p_pred != p_now):
+        out["DM_estadistico"], out["DM_p_valor"] = diebold_mariano(p_true - p_pred, p_true - p_now, horizon)
+    else:
+        out["DM_estadistico"], out["DM_p_valor"] = np.nan, np.nan
+    return out

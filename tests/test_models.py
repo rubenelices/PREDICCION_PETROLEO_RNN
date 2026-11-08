@@ -22,3 +22,15 @@ def test_same_structure_only_cell_changes():
 def test_unknown_cell_is_rejected():
     with pytest.raises(ValueError):
         RecurrentRegressor("transformer", 17)
+
+
+def test_linear_skip_adds_a_linear_model_on_the_last_day():
+    plain = RecurrentRegressor("gru", 17, hidden_size=16)
+    skip = RecurrentRegressor("gru", 17, hidden_size=16, linear_skip=True)
+    assert count_parameters(skip) - count_parameters(plain) == 17 + 1
+    x = torch.randn(4, 30, 17)
+    skip.eval()
+    with torch.no_grad():
+        rnn_part = skip.head(skip.recurrent(x)[0][:, -1]).squeeze(-1)
+        linear_part = skip.skip(x[:, -1]).squeeze(-1)
+        torch.testing.assert_close(skip(x), rnn_part + linear_part)

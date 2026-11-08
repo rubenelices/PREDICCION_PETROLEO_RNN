@@ -1,0 +1,40 @@
+{
+  "red": "GRU",
+  "cell": "gru",
+  "h": 252,
+  "horizonte": "1 año",
+  "ronda_ajuste": 2,
+  "semilla": 0,
+  "config": {
+    "hidden_size": 128,
+    "num_layers": 2,
+    "dropout": 0.44360637128816327,
+    "lr": 0.0002639678924906705,
+    "batch_size": 256,
+    "weight_decay": 4.8287152161792064e-05,
+    "loss": "mse",
+    "max_epochs": 150,
+    "patience": 15,
+    "window": 20,
+    "half_life": null,
+    "linear_skip": false,
+    "features": null
+  },
+  "n_params": 155265,
+  "epocas": 23,
+  "mejor_epoca": 8,
+  "tiempo_s": 17.397066500008805,
+  "train_rel_mejor": 0.645199911184015,
+  "val_rel_mejor": 0.7625260895399644,
+  "val_rel_ajuste": 1.0492707903262124,
+  "periodo_aprende": [
+    "2002-01",
+    "2018-12"
+  ],
+  "periodo_valida": [
+    "2019-12",
+    "2022-12"
+  ],
+  "n_aprende": 4098,
+  "n_valida": 772
+}

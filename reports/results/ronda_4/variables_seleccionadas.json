@@ -1,0 +1,37 @@
+{
+  "5": [
+    "ret_brent",
+    "vol_63",
+    "ratio_cobre_z252",
+    "tipo_bce_chg_63",
+    "ret_wti_fut",
+    "basis_wti",
+    "ret_oro",
+    "spread_brent_wti",
+    "ret_gas_fut",
+    "log_vix"
+  ],
+  "63": [
+    "vol_21",
+    "basis_wti",
+    "vol_63",
+    "tipo_bce_chg_63",
+    "ratio_cobre_z252",
+    "log_vix",
+    "ret_brent",
+    "ratio_oro_z252",
+    "spread_brent_wti",
+    "ret_cobre",
+    "ret_wti_fut",
+    "ret_indice_dolar",
+    "ret_cny_por_usd"
+  ],
+  "252": [
+    "ratio_cobre_z252",
+    "ret_gas_fut",
+    "ratio_oro_z252",
+    "ret_brent",
+    "ret_oro",
+    "ret_indice_dolar"
+  ]
+}

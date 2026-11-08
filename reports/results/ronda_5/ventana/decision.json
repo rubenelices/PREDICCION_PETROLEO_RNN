@@ -1,0 +1,51 @@
+{
+  "regla": "Por horizonte, la ventana más corta cuya media de las tres redes queda a menos de 0.005 de la mejor. Configuración por defecto para las tres redes, 3 semillas, validación 2019-2023.",
+  "horizontes": {
+    "5": {
+      "horizonte": "1 semana",
+      "ventana": 20,
+      "mejor_ventana_sin_desempate": 60,
+      "puntuaciones": {
+        "20": 1.005,
+        "60": 1.0048,
+        "120": 1.0059
+      },
+      "preferida_por_cada_red": {
+        "RNN simple": 20,
+        "LSTM": 20,
+        "GRU": 60
+      }
+    },
+    "63": {
+      "horizonte": "3 meses",
+      "ventana": 20,
+      "mejor_ventana_sin_desempate": 20,
+      "puntuaciones": {
+        "20": 1.0792,
+        "60": 1.091,
+        "120": 1.1039
+      },
+      "preferida_por_cada_red": {
+        "RNN simple": 20,
+        "LSTM": 20,
+        "GRU": 60
+      }
+    },
+    "252": {
+      "horizonte": "1 año",
+      "ventana": 20,
+      "mejor_ventana_sin_desempate": 20,
+      "puntuaciones": {
+        "20": 1.0736,
+        "60": 1.1073,
+        "120": 1.0877,
+        "250": 1.105
+      },
+      "preferida_por_cada_red": {
+        "RNN simple": 120,
+        "LSTM": 20,
+        "GRU": 20
+      }
+    }
+  }
+}

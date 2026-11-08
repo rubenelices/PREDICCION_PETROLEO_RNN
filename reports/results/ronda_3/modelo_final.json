@@ -1,0 +1,48 @@
+{
+  "decidido": "2026-11-06T10:55",
+  "antes_del_test": true,
+  "regla": "Familia RNN simple · top-5 (media de las 5 mejores configuraciones de la búsqueda de la ronda 2) con el peso del ajuste elegido en validación por la media de los años. Elegida por tener el mejor error medio de validación a 63 días. Decidido mirando solo la validación 2019-2023.",
+  "horizontes": {
+    "corto": {
+      "modelo": "RNN simple · top-5 ajustada",
+      "peso": 0.55,
+      "validacion_rmse_relativo": 0.9955,
+      "validacion_peor_año": 1.0015
+    },
+    "medio": {
+      "modelo": "RNN simple · top-5 ajustada",
+      "peso": 1.0,
+      "validacion_rmse_relativo": 0.9005,
+      "validacion_peor_año": 1.0109
+    },
+    "largo": {
+      "modelo": "RNN simple · top-5 ajustada",
+      "peso": 0.0,
+      "validacion_rmse_relativo": 1.0,
+      "validacion_peor_año": 1.0
+    }
+  },
+  "red_de_seguridad": {
+    "corto": {
+      "modelo": "RNN simple · top-5 prudente",
+      "peso": 0.25,
+      "validacion_rmse_relativo": 0.9968,
+      "validacion_peor_año": 0.998
+    },
+    "medio": {
+      "modelo": "RNN simple · top-5 prudente",
+      "peso": 0.15,
+      "validacion_rmse_relativo": 0.9763,
+      "validacion_peor_año": 0.9997
+    },
+    "largo": {
+      "modelo": "RNN simple · top-5 prudente",
+      "peso": 0.0,
+      "validacion_rmse_relativo": 1.0,
+      "validacion_peor_año": 1.0
+    }
+  },
+  "descartado_antes_del_test": {
+    "recientes": "empeora en validación en casi todas las redes y horizontes"
+  }
+}

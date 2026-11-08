@@ -15,6 +15,10 @@ class RecurrentRegressor(nn.Module):
 
     Input: ``(batch, window, n_features)``. Output: ``(batch,)`` with the
     predicted (scaled) cumulative log return for one horizon.
+
+    With ``linear_skip=True`` a linear model on the last day's features is
+    added to the output (a "highway" in parallel to the recurrent part): the
+    network only has to learn what a linear model cannot.
     """
 
     def __init__(
@@ -24,6 +28,7 @@ class RecurrentRegressor(nn.Module):
         hidden_size: int = 32,
         num_layers: int = 1,
         dropout: float = 0.0,
+        linear_skip: bool = False,
     ):
         super().__init__()
         if cell not in CELLS:
@@ -38,10 +43,14 @@ class RecurrentRegressor(nn.Module):
         )
         self.dropout = nn.Dropout(dropout)
         self.head = nn.Linear(hidden_size, 1)
+        self.skip = nn.Linear(n_features, 1) if linear_skip else None
 
     def forward(self, x):
         out, _ = self.recurrent(x)
-        return self.head(self.dropout(out[:, -1])).squeeze(-1)
+        y = self.head(self.dropout(out[:, -1]))
+        if self.skip is not None:
+            y = y + self.skip(x[:, -1])
+        return y.squeeze(-1)
 
 
 def count_parameters(model: nn.Module) -> int:

@@ -1,0 +1,40 @@
+{
+  "red": "GRU",
+  "cell": "gru",
+  "h": 63,
+  "horizonte": "3 meses",
+  "ronda_ajuste": 2,
+  "semilla": 0,
+  "config": {
+    "hidden_size": 128,
+    "num_layers": 1,
+    "dropout": 0.38106223672432743,
+    "lr": 0.0006432517040354039,
+    "batch_size": 64,
+    "weight_decay": 4.08489906588106e-06,
+    "loss": "huber",
+    "max_epochs": 150,
+    "patience": 15,
+    "window": 60,
+    "half_life": null,
+    "linear_skip": false,
+    "features": null
+  },
+  "n_params": 56193,
+  "epocas": 17,
+  "mejor_epoca": 2,
+  "tiempo_s": 24.535114749975037,
+  "train_rel_mejor": 0.910397682302572,
+  "val_rel_mejor": 0.8925755863023971,
+  "val_rel_ajuste": 0.9459599666469227,
+  "periodo_aprende": [
+    "2002-04",
+    "2020-05"
+  ],
+  "periodo_valida": [
+    "2020-08",
+    "2023-09"
+  ],
+  "n_aprende": 4408,
+  "n_valida": 800
+}
