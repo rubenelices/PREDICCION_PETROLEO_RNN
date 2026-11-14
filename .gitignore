@@ -235,6 +235,9 @@ reports/results/**/*.log
 reports/results/**/predicciones_*.csv
 reports/results/**/metricas_por_semilla.csv
 reports/results/**/pesos*.json
+# The test of the final round needs the weights chosen in its validation
+!reports/results/ronda_5/pesos.json
+!reports/results/ronda_5/pesos_prudentes.json
 # Notebook 07 shows the first test in detail
 !reports/results/ronda_1/predicciones_test.csv
 !reports/results/ronda_1/metricas_por_semilla.csv

@@ -1,0 +1,44 @@
+{
+  "corto": {
+    "RNN simple": 0.15,
+    "LSTM": 0.35,
+    "GRU": 0.2,
+    "Combinación": 0.2,
+    "RNN simple · top-3 x2 semillas": 0.2,
+    "LSTM · top-3 x2 semillas": 0.3,
+    "GRU · top-3 x2 semillas": 0.2,
+    "Combinación · top-3 x2 semillas": 0.2,
+    "RNN simple · top-5 x2 semillas": 0.2,
+    "LSTM · top-5 x2 semillas": 0.25,
+    "GRU · top-5 x2 semillas": 0.25,
+    "Combinación · top-5 x2 semillas": 0.2
+  },
+  "medio": {
+    "RNN simple": 0.85,
+    "LSTM": 0.0,
+    "GRU": 0.0,
+    "Combinación": 0.0,
+    "RNN simple · top-3 x2 semillas": 1.0,
+    "LSTM · top-3 x2 semillas": 0.0,
+    "GRU · top-3 x2 semillas": 0.0,
+    "Combinación · top-3 x2 semillas": 0.0,
+    "RNN simple · top-5 x2 semillas": 1.0,
+    "LSTM · top-5 x2 semillas": 0.0,
+    "GRU · top-5 x2 semillas": 0.0,
+    "Combinación · top-5 x2 semillas": 0.0
+  },
+  "largo": {
+    "RNN simple": 0.0,
+    "LSTM": 0.0,
+    "GRU": 0.0,
+    "Combinación": 0.0,
+    "RNN simple · top-3 x2 semillas": 0.0,
+    "LSTM · top-3 x2 semillas": 0.0,
+    "GRU · top-3 x2 semillas": 0.0,
+    "Combinación · top-3 x2 semillas": 0.0,
+    "RNN simple · top-5 x2 semillas": 0.0,
+    "LSTM · top-5 x2 semillas": 0.0,
+    "GRU · top-5 x2 semillas": 0.0,
+    "Combinación · top-5 x2 semillas": 0.0
+  }
+}

@@ -9,6 +9,12 @@ are depends on the variant of the round (see ``VARIANTS`` in config.py):
     top5_lineal     top5, each with a linear model in parallel
     top5_x2         top5 with 2 seeds per configuration (10 models)
     top5_menos_var  top5 with only the variables that help (see ``importancia``)
+    top3_x2         the 3 best configurations, 2 seeds each (6 models)
+
+Round 5 uses, per horizon, the same input window for the three networks (the
+one chosen in its search). At the end of ``validacion`` the rule written down
+in config.py picks the variant and whether to shrink the forecast
+(variante_decision.json).
 
 Stage ``importancia`` (round 4, before ``validacion``; never touches the test):
     Permutation importance of every input variable on the validation years:
@@ -30,6 +36,18 @@ Stage ``validacion`` (never touches the test):
     Outputs: validacion_resumen.csv, predicciones_validacion.csv, pesos.json,
              pesos_prudentes.json
 
+Stage ``hacia_atras`` (after writing modelo_final.json, before the test):
+    The chosen variant of the three networks, unchanged (same configurations,
+    seeds and adjustment weights), is retrained on every year from 2010 to
+    2018 with only the data before it. Those years were never used to choose
+    anything, so they show whether the validation advantage holds. Rule
+    written down before running: a model holds if its mean relative RMSE over
+    all years (2010-2023) is below 1 and it beats the naive forecast in at
+    least half of them; with one of the two it is "dudoso". It does not
+    change the final model.
+    Outputs: hacia_atras_resumen.csv, predicciones_hacia_atras.csv,
+             hacia_atras_decision.json
+
 Stage ``test`` (run once, after reviewing the validation):
     Every model of the variants kept for the test (``TEST_VARIANTS``) is
     trained on all data before 2024 (same embargo and early-stopping rule)
@@ -42,6 +60,7 @@ All outputs go to reports/results/ronda_N/.
 Usage:
     poetry run python scripts/train.py importancia [--round N]
     poetry run python scripts/train.py validacion [--round N]
+    poetry run python scripts/train.py hacia_atras [--round N]
     poetry run python scripts/train.py test [--round N]
     add --nucleos N to cap the processes running at once (cooler, slower)
 """
@@ -56,6 +75,7 @@ import pandas as pd
 
 from oil_forecast import baselines
 from oil_forecast.config import (
+    BACKWARD_YEARS,
     CURRENT_ROUND,
     FINAL_SEEDS,
     HALF_LIFE_DAYS,
@@ -64,12 +84,15 @@ from oil_forecast.config import (
     ROUNDS,
     TEST_START,
     TEST_VARIANTS,
-    TOP_K,
     TUNED_ROUND,
     VAL_YEARS,
+    VARIANT_TOLERANCE,
     VARIANTS,
+    detrend,
     n_workers,
     results_dir,
+    study_name,
+    tuned_window,
     tuning_dir,
 )
 from oil_forecast.metrics import evaluate_forecast, rmse
@@ -81,6 +104,7 @@ MODEL_NAMES = {"rnn": "RNN simple", "lstm": "LSTM", "gru": "GRU"}
 VARIANT_LABELS = {
     "base": "", "top5": " · top-5", "recientes": " · recientes", "lineal": " · lineal",
     "top5_lineal": " · top-5 + lineal", "top5_x2": " · top-5 x2 semillas", "top5_menos_var": " · top-5 menos variables",
+    "top3_x2": " · top-3 x2 semillas",
 }
 N_PERMUTATIONS = 3
 COMBINATION = "Combinación"
@@ -94,9 +118,11 @@ def model_name(cell_or_combo: str, variant: str) -> str:
 
 
 def best_config(cell: str, horizon: int, round_: int) -> tuple[TrainConfig, dict]:
-    path = tuning_dir(TUNED_ROUND[round_]) / f"{cell}_h{horizon}_best.json"
+    window = tuned_window(horizon, round_)
+    path = tuning_dir(TUNED_ROUND[round_]) / f"{study_name(cell, horizon, window)}_best.json"
     best = json.loads(path.read_text())
-    return TrainConfig(**best["params"]), best
+    params = {**best["params"], **({"window": window} if window else {})}
+    return TrainConfig(**params), best
 
 
 INT_PARAMS = ("hidden_size", "num_layers", "batch_size", "window")
@@ -110,7 +136,7 @@ def top_configs(cell: str, horizon: int, round_: int, k: int, window: int | None
     (round 5 searches with a fixed window per study).
     """
     tuned = TUNED_ROUND[round_]
-    name = f"{cell}_h{horizon}" + (f"_v{window}" if window else "")
+    name = study_name(cell, horizon, window)
     trials = pd.read_csv(tuning_dir(tuned) / f"{name}_trials.csv").sort_values("number")
     finished = trials[trials["state"].isin(["COMPLETE", "PRUNED"])].head(N_TRIALS[tuned])
     complete = finished[finished["state"] == "COMPLETE"].sort_values("value", kind="stable")
@@ -136,14 +162,15 @@ def selected_features(horizon: int, round_: int) -> tuple[str, ...]:
 
 def members(cell: str, horizon: int, round_: int, variant: str) -> list[tuple[TrainConfig, int]]:
     """(configuration, seed) of the models whose mean is the network's forecast."""
-    if variant.startswith("top5"):
-        configs = top_configs(cell, horizon, round_, TOP_K)
+    if variant.startswith("top"):
+        k = int(variant[3])  # top3..., top5...
+        configs = top_configs(cell, horizon, round_, k, tuned_window(horizon, round_))
         if variant == "top5_lineal":
             configs = [replace(c, linear_skip=True) for c in configs]
         elif variant == "top5_menos_var":
             feats = selected_features(horizon, round_)
             configs = [replace(c, features=feats) for c in configs]
-        seeds_per_config = 2 if variant == "top5_x2" else 1
+        seeds_per_config = 2 if variant.endswith("_x2") else 1
         return [(c, i + len(configs) * k) for k in range(seeds_per_config) for i, c in enumerate(configs)]
     cfg, _ = best_config(cell, horizon, round_)
     if variant == "recientes":
@@ -153,7 +180,7 @@ def members(cell: str, horizon: int, round_: int, variant: str) -> list[tuple[Tr
     return [(cfg, seed) for seed in FINAL_SEEDS]
 
 
-def fit_members(data, cell: str, horizon: int, mem, train_pos, eval_pos):
+def fit_members(data, cell: str, horizon: int, mem, train_pos, eval_pos, no_drift: bool = False):
     """Train every member; returns (eval positions, predictions, infos)."""
     cache, preds, infos, pos = {}, [], [], None
     for cfg, seed in mem:
@@ -164,7 +191,7 @@ def fit_members(data, cell: str, horizon: int, mem, train_pos, eval_pos):
         assert pos is None or np.array_equal(pos, p["eval_pos"])
         pos = p["eval_pos"]
         model, info = fit(cell, cfg, p, seed=seed)
-        preds.append(predict(model, p))
+        preds.append(predict(model, p, no_drift))
         infos.append({**info, "semilla": seed, "ventana": cfg.window})
     return pos, preds, infos
 
@@ -193,7 +220,7 @@ def choose_weight(price, horizon: int, origins, years, log_ret, criterion: str =
     return float(WEIGHT_GRID[i]), float(by_year[i].mean())
 
 
-def choose_ridge_alpha(data, horizon: int) -> float:
+def choose_ridge_alpha(data, horizon: int, no_drift: bool = False) -> float:
     """Alpha with the best mean relative RMSE on the walk-forward folds."""
     folds = walk_forward_folds(data.index, horizon, VAL_YEARS, TEST_START)
     prepared = [prepare(data, horizon, f.train, f.val) for f in folds]
@@ -202,7 +229,7 @@ def choose_ridge_alpha(data, horizon: int) -> float:
         rel = []
         for p in prepared:
             pos = p["eval_pos"]
-            pred = data.price[pos] * np.exp(baselines.ridge(p, alpha))
+            pred = data.price[pos] * np.exp(baselines.ridge(p, alpha, no_drift))
             true = data.price[pos + horizon]
             rel.append(rmse(true, pred) / rmse(true, data.price[pos]))
         scores[alpha] = np.mean(rel)
@@ -210,14 +237,47 @@ def choose_ridge_alpha(data, horizon: int) -> float:
 
 
 # ---------------------------------------------------------------- validation
-def validation_job(cell: str, horizon: int, round_: int, variant: str) -> pd.DataFrame:
+def decide_variant(summary: pd.DataFrame, round_: int) -> dict:
+    """Variant and shrinkage of every horizon, with the rule in config.py.
+
+    Scores are the mean relative RMSE of the three networks, so the three
+    keep identical conditions. A simpler variant (earlier in ``VARIANTS``)
+    within ``VARIANT_TOLERANCE`` of the best wins; the adjusted forecast is
+    kept only if it lowers that mean by at least ``VARIANT_TOLERANCE``.
+    """
+    decision = {
+        "regla": "Por horizonte, media de las tres redes: gana la variante con menor error relativo y, a menos de "
+                 f"{VARIANT_TOLERANCE}, la más sencilla; la versión ajustada solo si baja la media al menos "
+                 f"{VARIANT_TOLERANCE}.",
+        "horizontes": {},
+    }
+    for hname, g in summary.groupby("horizonte", sort=False):
+        score = g.set_index("modelo")["rmse_relativo"]
+        table = pd.DataFrame({
+            v: {**{c: score[model_name(c, v)] for c in CELLS},
+                "media_3_redes": np.mean([score[model_name(c, v)] for c in CELLS]),
+                "media_ajustada": np.mean([score[model_name(c, v) + ADJUSTED] for c in CELLS])}
+            for v in VARIANTS[round_]
+        }).T
+        best = table["media_3_redes"].min()
+        chosen = next(v for v in VARIANTS[round_] if table.loc[v, "media_3_redes"] <= best + VARIANT_TOLERANCE)
+        shrink = bool(table.loc[chosen, "media_3_redes"] - table.loc[chosen, "media_ajustada"] >= VARIANT_TOLERANCE)
+        decision["horizontes"][hname] = {"variante": chosen, "ajustada": shrink,
+                                         "puntuaciones": table.round(4).to_dict(orient="index")}
+        print(f"\n== {hname}: error relativo medio en validación (1 = ingenuo)")
+        print(table.round(3).to_string())
+        print(f"→ variante elegida: {chosen}{' (ajustada)' if shrink else ' (sin ajustar)'}")
+    return decision
+
+
+def validation_job(cell: str, horizon: int, round_: int, variant: str, years=VAL_YEARS) -> pd.DataFrame:
     """Out-of-fold predictions (mean of the members) of one network."""
     data = load_model_data()
     mem = members(cell, horizon, round_, variant)
     rows = []
     name = model_name(cell, variant)
-    for fold in walk_forward_folds(data.index, horizon, VAL_YEARS, TEST_START):
-        pos, preds, infos = fit_members(data, cell, horizon, mem, fold.train, fold.val)
+    for fold in walk_forward_folds(data.index, horizon, years, TEST_START):
+        pos, preds, infos = fit_members(data, cell, horizon, mem, fold.train, fold.val, detrend(round_))
         pred = np.mean(preds, axis=0)
         rel = relative_rmse_by_year(data.price, horizon, pos, np.full(len(pos), int(fold.name)), pred).iloc[0]
         epochs = np.mean([i["best_epoch"] for i in infos])
@@ -304,12 +364,12 @@ def run_validation(round_: int, cores: int | None = None) -> None:
         years = nets.index.get_level_values("año").to_numpy()
         pos = nets.index.get_level_values("pos").to_numpy()
 
-        alpha = choose_ridge_alpha(data, h)
+        alpha = choose_ridge_alpha(data, h, detrend(round_))
         ridge = []
         for fold in walk_forward_folds(data.index, h, VAL_YEARS, TEST_START):
             p = prepare(data, h, fold.train, fold.val)
             idx = pd.MultiIndex.from_arrays([np.full(len(p["eval_pos"]), int(fold.name)), p["eval_pos"]])
-            ridge.append(pd.Series(baselines.ridge(p, alpha), index=idx))
+            ridge.append(pd.Series(baselines.ridge(p, alpha, detrend(round_)), index=idx))
         nets["Ridge"] = pd.concat(ridge).reindex(nets.index).to_numpy()
 
         weights[hname], prudent[hname] = {}, {}
@@ -342,7 +402,88 @@ def run_validation(round_: int, cores: int | None = None) -> None:
     (out / "pesos_prudentes.json").write_text(json.dumps(prudent, indent=2, ensure_ascii=False))
     pd.set_option("display.width", 200)
     print(summary[["horizonte", "modelo", "peso", "rmse_relativo", "peor_año"]].round(3).to_string(index=False))
+    if round_ >= 5:
+        decision = decide_variant(summary, round_)
+        (out / "variante_decision.json").write_text(json.dumps(decision, indent=2, ensure_ascii=False))
     print(f"\nResultados de validación guardados en {out}")
+
+
+# ------------------------------------------------------------------ backward
+def verdict(by_year: pd.Series) -> str:
+    """Rule of the backward validation (written down before running it)."""
+    holds = [by_year.mean() < 1, (by_year < 1).sum() >= len(by_year) / 2]
+    return "se sostiene" if all(holds) else "dudoso" if any(holds) else "no se sostiene"
+
+
+def run_backward(round_: int, cores: int | None = None) -> None:
+    out = results_dir(round_)
+    if not (out / "modelo_final.json").exists():
+        raise SystemExit("Falta modelo_final.json: apunta el modelo final antes de la validación hacia atrás.")
+    final = json.loads((out / "modelo_final.json").read_text())["horizontes"]
+    weights = json.loads((out / "pesos.json").read_text())
+    validation = pd.read_csv(out / "validacion_resumen.csv").set_index(["horizonte", "modelo"])
+    data = load_model_data()
+    variant = TEST_VARIANTS[round_][0]
+    jobs = [(cell, h, round_, variant, BACKWARD_YEARS) for cell in ("lstm", "gru", "rnn") for h in HORIZONS.values()]
+    with ProcessPoolExecutor(max_workers=n_workers(len(jobs), cores)) as pool:
+        oof = pd.concat(pool.map(validation_job, *zip(*jobs)))
+
+    summary, predictions, decision = [], [], {}
+    for hname, h in HORIZONS.items():
+        nets = oof[oof.h == h].pivot_table(index=["año", "pos"], columns="modelo", values="retorno_pred")
+        names = [model_name(c, variant) for c in CELLS]
+        combo = model_name(COMBINATION, variant)
+        nets[combo] = nets[names].mean(axis=1)
+        alpha = choose_ridge_alpha(data, h, detrend(round_))
+        ridge = []
+        for fold in walk_forward_folds(data.index, h, BACKWARD_YEARS, TEST_START):
+            p = prepare(data, h, fold.train, fold.val)
+            idx = pd.MultiIndex.from_arrays([np.full(len(p["eval_pos"]), int(fold.name)), p["eval_pos"]])
+            ridge.append(pd.Series(baselines.ridge(p, alpha, detrend(round_)), index=idx))
+        nets["Ridge"] = pd.concat(ridge).reindex(nets.index).to_numpy()
+        years = nets.index.get_level_values("año").to_numpy()
+        pos = nets.index.get_level_values("pos").to_numpy()
+
+        rows = []
+        for model in [*names, combo, "Ridge"]:
+            variants = [(model, 1.0)]
+            if model != "Ridge":
+                variants.append((model + ADJUSTED, weights[hname][model]))
+            for label, w in variants:
+                r = w * nets[model].to_numpy()
+                back = relative_rmse_by_year(data.price, h, pos, years, r)
+                val_row = validation.loc[(hname, label)]
+                val = pd.Series({int(c[4:]): val_row[c] for c in validation.columns
+                                 if c.startswith("rel_") and pd.notna(val_row[c])})
+                both = pd.concat([back, val])
+                rows.append({
+                    "horizonte": hname, "h": h, "modelo": label, "peso": w,
+                    "media_2010_2018": back.mean(), "gana_2010_2018": f"{(back < 1).sum()} de {len(back)}",
+                    "media_2019_2023": val.mean(), "media_todos": both.mean(),
+                    "gana_todos": f"{(both < 1).sum()} de {len(both)}", "veredicto": verdict(both),
+                    "modelo_app": label == final[hname]["modelo"],
+                    **{f"rel_{y}": v for y, v in both.sort_index().items()},
+                })
+                predictions.append(pd.DataFrame({"horizonte": hname, "modelo": label, "año": years,
+                                                 "origen": data.index[pos], "retorno_pred": r}))
+        rows = pd.DataFrame(rows)
+        summary.append(rows)
+        app = rows[rows.modelo_app].iloc[0]
+        decision[hname] = {"modelo": app.modelo, "media_2010_2018": round(app.media_2010_2018, 4),
+                           "gana_2010_2018": app.gana_2010_2018, "media_todos": round(app.media_todos, 4),
+                           "gana_todos": app.gana_todos, "veredicto": app.veredicto}
+        print(f"\n== {hname}: error relativo (1 = ingenuo); validación hacia atrás 2010-2018 y todos los años")
+        print(rows[["modelo", "peso", "media_2010_2018", "gana_2010_2018", "media_2019_2023", "media_todos",
+                    "gana_todos", "veredicto"]].round(3).to_string(index=False))
+        print(f"→ modelo de la app ({app.modelo}): {app.veredicto}")
+
+    pd.concat(summary).to_csv(out / "hacia_atras_resumen.csv", index=False)
+    pd.concat(predictions).to_csv(out / "predicciones_hacia_atras.csv", index=False)
+    rule = ("Un modelo se sostiene si su error relativo medio con todos los años (2010-2023) es menor que 1 y gana "
+            "al ingenuo en al menos la mitad de ellos; con solo una de las dos, dudoso. No cambia el modelo final.")
+    (out / "hacia_atras_decision.json").write_text(
+        json.dumps({"regla": rule, "horizontes": decision}, indent=2, ensure_ascii=False) + "\n")
+    print(f"\nValidación hacia atrás guardada en {out}")
 
 
 # ---------------------------------------------------------------------- test
@@ -389,16 +530,17 @@ def test_job(hname: str, h: int, round_: int) -> tuple[dict, list]:
 
     record(results, data, hname, h, origins, "Ingenuo", baselines.naive(p), {"n_params": 0})
     record(results, data, hname, h, origins, "Media histórica", baselines.historical_mean(p), {"n_params": 1})
-    alpha = choose_ridge_alpha(data, h)
+    alpha = choose_ridge_alpha(data, h, detrend(round_))
     n_ridge = p["X_eval"].shape[1] * p["X_eval"].shape[2] + 1
-    record(results, data, hname, h, origins, "Ridge", baselines.ridge(p, alpha),
+    record(results, data, hname, h, origins, "Ridge", baselines.ridge(p, alpha, detrend(round_)),
            {"n_params": n_ridge, "alpha": alpha, "validacion_rmse_relativo": validation.get((hname, "Ridge"))})
 
     for variant in TEST_VARIANTS[round_]:
         ensembles, n_params, train_time = {}, 0, 0.0
         for cell in CELLS:
             name = model_name(cell, variant)
-            pos, preds, infos = fit_members(data, cell, h, members(cell, h, round_, variant), train_pos, origins)
+            pos, preds, infos = fit_members(data, cell, h, members(cell, h, round_, variant), train_pos, origins,
+                                            detrend(round_))
             assert np.array_equal(pos, origins)
             rows = []
             for yhat, info in zip(preds, infos):
@@ -447,7 +589,7 @@ def run_test(round_: int, cores: int | None = None) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("stage", choices=["importancia", "validacion", "test"])
+    parser.add_argument("stage", choices=["importancia", "validacion", "hacia_atras", "test"])
     parser.add_argument("--round", type=int, choices=ROUNDS, default=CURRENT_ROUND)
     parser.add_argument("--nucleos", type=int, default=None,
                         help="máximo de procesos a la vez (menos = más lento pero se calienta menos)")
@@ -456,6 +598,8 @@ def main() -> None:
         run_importance(args.round, args.nucleos)
     elif args.stage == "validacion":
         run_validation(args.round, args.nucleos)
+    elif args.stage == "hacia_atras":
+        run_backward(args.round, args.nucleos)
     else:
         run_test(args.round, args.nucleos)
 

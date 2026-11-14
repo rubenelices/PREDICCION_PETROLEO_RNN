@@ -16,10 +16,10 @@ def historical_mean(prepared: dict) -> np.ndarray:
     return np.full(len(prepared["eval_pos"]), prepared["y_mean"])
 
 
-def ridge(prepared: dict, alpha: float) -> np.ndarray:
-    """Linear model on the flattened 60-day window of the same features."""
+def ridge(prepared: dict, alpha: float, detrend: bool = False) -> np.ndarray:
+    """Linear model on the flattened window of the same features (``detrend``: as in ``predict``)."""
     X = np.concatenate([prepared["X_fit"], prepared["X_es"]])
     y = np.concatenate([prepared["y_fit"], prepared["y_es"]])
     model = Ridge(alpha=alpha).fit(X.reshape(len(X), -1), y)
     z = model.predict(prepared["X_eval"].reshape(len(prepared["X_eval"]), -1))
-    return z * prepared["y_std"] + prepared["y_mean"]
+    return z * prepared["y_std"] + (0.0 if detrend else prepared["y_mean"])

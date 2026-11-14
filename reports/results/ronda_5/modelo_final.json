@@ -1,0 +1,54 @@
+{
+  "decidido": "2026-11-13T22:41",
+  "antes_del_test": true,
+  "regla": "Ventana de 20 días para las tres redes (ventana_decision.json). Variante y ajuste con la regla de config.py (variante_decision.json): la mejor configuración de la búsqueda con 5 semillas en los tres horizontes, ajustada a 3 meses y a 1 año. Modelo de la app: la red con menor error relativo medio en validación 2019-2023 en cada horizonte. La tabla comparativa muestra las tres redes.",
+  "horizontes": {
+    "corto": {
+      "modelo": "LSTM",
+      "red": "LSTM",
+      "variante": "base",
+      "peso": 1.0,
+      "validacion_rmse_relativo": 1.0005,
+      "validacion_peor_año": 1.0033,
+      "validacion_por_año": {
+        "2019": 1.0033,
+        "2020": 0.998,
+        "2021": 0.9976,
+        "2022": 1.0021,
+        "2023": 1.0014
+      },
+      "años_que_gana_al_ingenuo": "2 de 5"
+    },
+    "medio": {
+      "modelo": "RNN simple ajustada",
+      "red": "RNN simple",
+      "variante": "base",
+      "peso": 0.9,
+      "validacion_rmse_relativo": 0.9719,
+      "validacion_peor_año": 0.9902,
+      "validacion_por_año": {
+        "2019": 0.9504,
+        "2020": 0.9902,
+        "2021": 0.9682,
+        "2022": 0.9665,
+        "2023": 0.9842
+      },
+      "años_que_gana_al_ingenuo": "5 de 5"
+    },
+    "largo": {
+      "modelo": "LSTM ajustada",
+      "red": "LSTM",
+      "variante": "base",
+      "peso": 1.0,
+      "validacion_rmse_relativo": 0.9029,
+      "validacion_peor_año": 1.1434,
+      "validacion_por_año": {
+        "2019": 1.1144,
+        "2020": 0.831,
+        "2021": 1.1434,
+        "2022": 0.5228
+      },
+      "años_que_gana_al_ingenuo": "2 de 4"
+    }
+  }
+}

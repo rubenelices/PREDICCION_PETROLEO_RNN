@@ -1,0 +1,29 @@
+{
+  "regla": "Un modelo se sostiene si su error relativo medio con todos los años (2010-2023) es menor que 1 y gana al ingenuo en al menos la mitad de ellos; con solo una de las dos, dudoso. No cambia el modelo final.",
+  "horizontes": {
+    "corto": {
+      "modelo": "LSTM",
+      "media_2010_2018": 1.0048,
+      "gana_2010_2018": "4 de 9",
+      "media_todos": 1.0033,
+      "gana_todos": "6 de 14",
+      "veredicto": "no se sostiene"
+    },
+    "medio": {
+      "modelo": "RNN simple ajustada",
+      "media_2010_2018": 1.0281,
+      "gana_2010_2018": "5 de 9",
+      "media_todos": 1.0081,
+      "gana_todos": "10 de 14",
+      "veredicto": "dudoso"
+    },
+    "largo": {
+      "modelo": "LSTM ajustada",
+      "media_2010_2018": 1.2481,
+      "gana_2010_2018": "3 de 9",
+      "media_todos": 1.1419,
+      "gana_todos": "5 de 13",
+      "veredicto": "no se sostiene"
+    }
+  }
+}

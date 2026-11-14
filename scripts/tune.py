@@ -22,7 +22,8 @@ Two rounds are kept for transparency (reports/tuning/ronda_N/):
        At the end the window of each horizon is chosen (``ventana_decision.json``):
        for each window, mean over the three networks of the mean of their 5
        best trials; the lower wins, and within 0.01 the 20-day window (3 times
-       cheaper to train).
+       cheaper to train). Forecasts leave out the training-period drift
+       (``DETREND_ROUNDS`` in config.py).
 
 Usage:
     poetry run python scripts/tune.py --cell lstm --horizon 63
@@ -50,7 +51,9 @@ from oil_forecast.config import (
     TEST_START,
     VAL_YEARS,
     WINDOW,
+    detrend,
     n_workers,
+    study_name,
     tuning_dir,
 )
 from oil_forecast.metrics import rmse
@@ -71,10 +74,6 @@ SEARCH_SPACES = {
 }
 WINDOW_TOP_K = 5
 WINDOW_TOLERANCE = 0.01
-
-
-def study_name(cell: str, horizon: int, window: int | None = None) -> str:
-    return f"{cell}_h{horizon}" + (f"_v{window}" if window else "")
 
 
 def in_space(params: dict, round_: int) -> bool:
@@ -131,7 +130,7 @@ def run_study(cell: str, horizon: int, n_trials: int, round_: int, window: int |
             preds = []
             for seed in seeds:
                 model, info = fit(cell, cfg, p, seed=seed)
-                preds.append(predict(model, p))
+                preds.append(predict(model, p, detrend(round_)))
             pos = p["eval_pos"]
             pred = price[pos] * np.exp(np.mean(preds, axis=0))
             rel.append(rmse(price[pos + horizon], pred) / rmse(price[pos + horizon], price[pos]))

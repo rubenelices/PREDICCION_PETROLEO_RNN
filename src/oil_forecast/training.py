@@ -194,9 +194,14 @@ def fit(cell: str, cfg: TrainConfig, prepared: dict, seed: int = 0, on_epoch=Non
     return model, info
 
 
-def predict(model: nn.Module, prepared: dict) -> np.ndarray:
-    """Predicted log return (original scale) for the evaluation origins."""
+def predict(model: nn.Module, prepared: dict, detrend: bool = False) -> np.ndarray:
+    """Predicted log return (original scale) for the evaluation origins.
+
+    The network learns the return minus the training-period average. With
+    ``detrend`` that average is not added back, so the forecast assumes zero
+    drift, like the naive forecast.
+    """
     model.eval()
     with torch.no_grad():
         z = model(torch.from_numpy(prepared["X_eval"])).numpy()
-    return z * prepared["y_std"] + prepared["y_mean"]
+    return z * prepared["y_std"] + (0.0 if detrend else prepared["y_mean"])

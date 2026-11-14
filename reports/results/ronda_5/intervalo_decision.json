@@ -1,0 +1,42 @@
+{
+  "regla": "Intervalo del 80%. Regla fijada antes de calcular: en cada horizonte, entre los métodos con cobertura total entre el 75% y el 85% (2010-2023, calibrando cada año solo con lo ya conocido), gana el de menor puntuación de intervalo media; uno más sencillo a menos del 2% gana. Si ninguno cubre lo bastante, el de cobertura más cercana. Los cuantiles finales se calibran con lo conocido antes de 2024-01-01.",
+  "nivel": 0.8,
+  "horizontes": {
+    "corto": {
+      "modelo": "LSTM",
+      "metodo": "conformal_vol",
+      "metodo_nombre": "Conformal escalado por volatilidad",
+      "centro": "predicción del modelo",
+      "escala": "volatilidad de 21 días",
+      "q_inferior": -3.2030916241977123,
+      "q_superior": 2.9318344930887044,
+      "n_calibracion": 3535,
+      "cobertura_2010_2023": 0.7983551629607066,
+      "anchura_pct_2010_2023": 13.22127145727007
+    },
+    "medio": {
+      "modelo": "RNN simple ajustada",
+      "metodo": "historico",
+      "metodo_nombre": "Histórico (precio de hoy)",
+      "centro": "precio de hoy",
+      "escala": "ninguna",
+      "q_inferior": -0.21129664318959276,
+      "q_superior": 0.23263255640192948,
+      "n_calibracion": 5330,
+      "cobertura_2010_2023": 0.7888372093023256,
+      "anchura_pct_2010_2023": 43.91103156651657
+    },
+    "largo": {
+      "modelo": "LSTM ajustada",
+      "metodo": "historico",
+      "metodo_nombre": "Histórico (precio de hoy)",
+      "centro": "precio de hoy",
+      "escala": "ninguna",
+      "q_inferior": -0.5153398226984737,
+      "q_superior": 0.5033778862868921,
+      "n_calibracion": 5141,
+      "cobertura_2010_2023": 0.7291965566714491,
+      "anchura_pct_2010_2023": 100.1195863006868
+    }
+  }
+}

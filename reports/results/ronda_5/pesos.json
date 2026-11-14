@@ -1,0 +1,44 @@
+{
+  "corto": {
+    "RNN simple": 0.4,
+    "LSTM": 0.45,
+    "GRU": 0.35,
+    "Combinación": 0.45,
+    "RNN simple · top-3 x2 semillas": 0.45,
+    "LSTM · top-3 x2 semillas": 0.5,
+    "GRU · top-3 x2 semillas": 0.4,
+    "Combinación · top-3 x2 semillas": 0.5,
+    "RNN simple · top-5 x2 semillas": 0.5,
+    "LSTM · top-5 x2 semillas": 0.5,
+    "GRU · top-5 x2 semillas": 0.45,
+    "Combinación · top-5 x2 semillas": 0.55
+  },
+  "medio": {
+    "RNN simple": 0.9,
+    "LSTM": 0.7,
+    "GRU": 0.35,
+    "Combinación": 0.85,
+    "RNN simple · top-3 x2 semillas": 1.0,
+    "LSTM · top-3 x2 semillas": 0.5,
+    "GRU · top-3 x2 semillas": 0.3,
+    "Combinación · top-3 x2 semillas": 0.85,
+    "RNN simple · top-5 x2 semillas": 1.0,
+    "LSTM · top-5 x2 semillas": 0.6,
+    "GRU · top-5 x2 semillas": 0.35,
+    "Combinación · top-5 x2 semillas": 0.9
+  },
+  "largo": {
+    "RNN simple": 0.15,
+    "LSTM": 1.0,
+    "GRU": 0.25,
+    "Combinación": 0.75,
+    "RNN simple · top-3 x2 semillas": 0.25,
+    "LSTM · top-3 x2 semillas": 0.95,
+    "GRU · top-3 x2 semillas": 0.2,
+    "Combinación · top-3 x2 semillas": 0.65,
+    "RNN simple · top-5 x2 semillas": 0.15,
+    "LSTM · top-5 x2 semillas": 1.0,
+    "GRU · top-5 x2 semillas": 0.1,
+    "Combinación · top-5 x2 semillas": 0.6
+  }
+}

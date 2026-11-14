@@ -65,3 +65,11 @@ def test_on_epoch_reports_every_epoch_without_changing_the_result():
     best = min(history, key=lambda e: e["val_mse"])
     assert best["epoch"] == info["best_epoch"] and best["best"]
     assert np.isclose(best["val_mse"], info["es_mse"])
+
+
+def test_detrend_leaves_out_the_training_drift():
+    p = {**_prepared(), "y_mean": 0.05, "y_std": 2.0}
+    cfg = TrainConfig(hidden_size=8, max_epochs=3, patience=2, batch_size=32, dropout=0.0)
+    model, _ = fit("rnn", cfg, p, seed=0)
+    np.testing.assert_allclose(predict(model, p) - predict(model, p, detrend=True), 0.05, rtol=1e-5)
+    np.testing.assert_allclose(baselines.ridge(p, 1.0) - baselines.ridge(p, 1.0, detrend=True), 0.05, rtol=1e-5)

@@ -38,6 +38,8 @@ from oil_forecast.config import (
     TEST_START,
     TUNED_ROUND,
     results_dir,
+    study_name,
+    tuned_window,
     tuning_dir,
 )
 from oil_forecast.models import CELLS
@@ -56,9 +58,11 @@ HORIZON_NAMES = {5: "1 semana", 63: "3 meses", 252: "1 año"}
 
 def tuned_config(cell: str, horizon: int, round_: int) -> tuple[TrainConfig, dict]:
     """Winner of the tuning used by ``round_``."""
-    path = tuning_dir(TUNED_ROUND[round_]) / f"{cell}_h{horizon}_best.json"
+    window = tuned_window(horizon, round_)
+    path = tuning_dir(TUNED_ROUND[round_]) / f"{study_name(cell, horizon, window)}_best.json"
     best = json.loads(path.read_text())
-    return TrainConfig(**best["params"]), best
+    params = {**best["params"], **({"window": window} if window else {})}
+    return TrainConfig(**params), best
 
 
 def relative(mse: float, naive_mse: float) -> float:

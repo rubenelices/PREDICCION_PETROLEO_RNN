@@ -1,0 +1,26 @@
+{
+  "cell": "gru",
+  "horizon": 252,
+  "value": 0.9598937542926085,
+  "params": {
+    "hidden_size": 32,
+    "num_layers": 2,
+    "dropout": 0.11309951572973517,
+    "lr": 3.307669886057188e-05,
+    "batch_size": 128,
+    "weight_decay": 1.2327953648358635e-06,
+    "loss": "huber",
+    "window": 60
+  },
+  "user_attrs": {
+    "mean_train_time_s": 150.64662420849982,
+    "n_params": 11169,
+    "rel_rmse_2019": 1.0386685827902802,
+    "rel_rmse_2020": 0.7946791291323311,
+    "rel_rmse_2021": 1.085523514209033,
+    "rel_rmse_2022": 0.9207037910387895
+  },
+  "trial": 26,
+  "n_trials": 30,
+  "round": 5
+}
