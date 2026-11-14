@@ -279,6 +279,7 @@ Cada red se entrena con todos los datos anteriores a 2024 (con embargo) y 5 semi
 - Ninguna diferencia con el ingenuo es significativa: el test tiene menos de tres años, y a 1 año las predicciones se solapan casi por completo.
 - El resultado depende mucho de un único shock (2026). Con otro periodo de test, la ordenación de las redes podría cambiar.
 - Los modelos solo ven datos de mercado. No tienen información de oferta (OPEP+, inventarios) ni de geopolítica, que son las que mueven los grandes cambios de precio.
+- La evaluación supone que el precio de cada día se conoce ese mismo día, igual que el modelo ingenuo del enunciado. En la práctica, el Brent al contado de FRED se publica con varios días hábiles de retraso, y por eso la aplicación indica siempre de qué fecha es el último precio.
 
 ## 10. Aplicación web
 
