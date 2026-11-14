@@ -1,0 +1,44 @@
+[
+ {
+  "date": "2008-07-03",
+  "kind": "pico",
+  "title": "Máximo histórico (144 $)",
+  "text": "Superciclo de materias primas: fuerte demanda de China y otros emergentes, oferta ajustada y entrada masiva de inversión financiera en los futuros del crudo.",
+  "precio": 143.95
+ },
+ {
+  "date": "2008-12-26",
+  "kind": "valle",
+  "title": "Desplome por la crisis financiera",
+  "text": "La quiebra de Lehman Brothers y la recesión mundial hunden la demanda: el Brent pierde más de un 75 % en menos de seis meses.",
+  "precio": 33.73
+ },
+ {
+  "date": "2016-01-20",
+  "kind": "valle",
+  "title": "Exceso de oferta (2014-2016)",
+  "text": "El auge del petróleo de esquisto en EE. UU. y la decisión de la OPEP de no recortar producción (noviembre de 2014) inundan el mercado: el Brent cae de 115 $ a 26 $.",
+  "precio": 26.01
+ },
+ {
+  "date": "2020-04-21",
+  "kind": "valle",
+  "title": "Pandemia de COVID-19",
+  "text": "Los confinamientos desploman la demanda de transporte, los depósitos se llenan y el WTI llega a cotizar en negativo el 20 de abril de 2020.",
+  "precio": 9.12
+ },
+ {
+  "date": "2022-03-08",
+  "kind": "pico",
+  "title": "Invasión de Ucrania",
+  "text": "Las sanciones a Rusia, uno de los mayores exportadores de crudo, disparan el temor a la escasez en plena recuperación post-pandemia.",
+  "precio": 133.18
+ },
+ {
+  "date": "2026-04-07",
+  "kind": "pico",
+  "title": "Guerra con Irán y estrecho de Ormuz",
+  "text": "El conflicto iniciado el 28 de febrero de 2026 interrumpe el tránsito por el estrecho de Ormuz, por donde pasa cerca de una quinta parte del petróleo mundial.",
+  "precio": 138.21
+ }
+]

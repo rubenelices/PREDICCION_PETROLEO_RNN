@@ -1,7 +1,7 @@
 [project]
 name = "prediccion-petroleo-rnn"
 version = "0.1.0"
-description = "Predicción del precio del Brent a 5, 63 y 252 días con RNN, LSTM y GRU, con aplicación Streamlit para cuantificar y explicar la incertidumbre."
+description = "Predicción del precio del Brent a 5, 63 y 252 días con RNN, LSTM y GRU, con una aplicación web que da la previsión, su intervalo del 80 % y una explicación sencilla."
 authors = [
     {name = "Rubén Elices Rodriguez", email = "relicrod@myuax.com"}
 ]
@@ -15,10 +15,10 @@ dependencies = [
     "scikit-learn (>=1.9.1,<2.0.0)",
     "statsmodels (>=0.15.0,<0.16.0)",
     "matplotlib (>=3.11.2,<4.0.0)",
-    "plotly (>=7.1.0,<8.0.0)",
     "optuna (>=5.0.0,<6.0.0)",
-    "streamlit (>=1.66.1,<2.0.0)",
-    "torch (>=2.15.0,<3.0.0)"
+    "torch (>=2.15.0,<3.0.0)",
+    "fastapi (>=0.162.7,<1.0.0)",
+    "uvicorn (>=0.54.0,<1.0.0)"
 ]
 
 

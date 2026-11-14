@@ -1,0 +1,40 @@
+{
+  "red": "RNN simple",
+  "cell": "rnn",
+  "h": 5,
+  "horizonte": "1 semana",
+  "ronda_ajuste": 5,
+  "semilla": 0,
+  "config": {
+    "hidden_size": 16,
+    "num_layers": 1,
+    "dropout": 0.33643987712542406,
+    "lr": 0.000420158171716765,
+    "batch_size": 256,
+    "weight_decay": 0.0005471353529173753,
+    "loss": "huber",
+    "max_epochs": 150,
+    "patience": 15,
+    "window": 20,
+    "half_life": null,
+    "linear_skip": false,
+    "features": null
+  },
+  "n_params": 561,
+  "epocas": 46,
+  "mejor_epoca": 31,
+  "tiempo_s": 1.2743077919876669,
+  "train_rel_mejor": 0.9723594364509154,
+  "val_rel_mejor": 1.0073749708055602,
+  "val_rel_ajuste": 0.9904129848476911,
+  "periodo_aprende": [
+    "2002-01",
+    "2020-10"
+  ],
+  "periodo_valida": [
+    "2020-10",
+    "2023-12"
+  ],
+  "n_aprende": 4555,
+  "n_valida": 809
+}

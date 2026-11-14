@@ -1,0 +1,13 @@
+{
+ "descargado": "2026-11-05T18:26:40",
+ "filas": 6501,
+ "desde": "2000-01-04",
+ "hasta": "2026-11-03",
+ "series": 21,
+ "variables_modelo": 16,
+ "ventana_dias": 20,
+ "inicio_test": "2024-01-01",
+ "modelo": "LSTM a 1 semana y 1 año · RNN simple a 3 meses",
+ "entrenado": "2026-11-14T19:34:44",
+ "datos_entrenamiento_hasta": "2026-11-03"
+}

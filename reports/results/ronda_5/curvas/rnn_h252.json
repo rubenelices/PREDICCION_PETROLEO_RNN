@@ -1,0 +1,40 @@
+{
+  "red": "RNN simple",
+  "cell": "rnn",
+  "h": 252,
+  "horizonte": "1 año",
+  "ronda_ajuste": 5,
+  "semilla": 0,
+  "config": {
+    "hidden_size": 16,
+    "num_layers": 2,
+    "dropout": 0.03651320072760762,
+    "lr": 3.143156519261483e-05,
+    "batch_size": 256,
+    "weight_decay": 2.662721293596177e-06,
+    "loss": "huber",
+    "max_epochs": 150,
+    "patience": 15,
+    "window": 20,
+    "half_life": null,
+    "linear_skip": false,
+    "features": null
+  },
+  "n_params": 1105,
+  "epocas": 129,
+  "mejor_epoca": 114,
+  "tiempo_s": 6.156951332988683,
+  "train_rel_mejor": 0.8488466499764371,
+  "val_rel_mejor": 0.8421552342537796,
+  "val_rel_ajuste": 1.0157622349706532,
+  "periodo_aprende": [
+    "2002-01",
+    "2018-12"
+  ],
+  "periodo_valida": [
+    "2019-12",
+    "2022-12"
+  ],
+  "n_aprende": 4098,
+  "n_valida": 772
+}

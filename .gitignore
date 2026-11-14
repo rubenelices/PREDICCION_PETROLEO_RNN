@@ -238,11 +238,12 @@ reports/results/**/pesos*.json
 # The test of the final round needs the weights chosen in its validation
 !reports/results/ronda_5/pesos.json
 !reports/results/ronda_5/pesos_prudentes.json
-# Notebook 07 shows the first test in detail
-!reports/results/ronda_1/predicciones_test.csv
-!reports/results/ronda_1/metricas_por_semilla.csv
+# Notebook 07 shows the test of the final model in detail
+!reports/results/ronda_5/predicciones_test.csv
+!reports/results/ronda_5/metricas_por_semilla.csv
 # Exported figures (the notebooks draw them)
 reports/figures/
 
 # Web prototype, developed separately
 PROTOTIPO_WEB/
+build/

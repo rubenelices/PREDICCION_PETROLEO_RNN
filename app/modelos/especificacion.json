@@ -1,0 +1,143 @@
+{
+ "ronda": 5,
+ "horizontes": {
+  "corto": {
+   "h": 5,
+   "redes": {
+    "rnn": {
+     "hidden_size": 16,
+     "num_layers": 1,
+     "dropout": 0.33643987712542406,
+     "lr": 0.000420158171716765,
+     "batch_size": 256,
+     "weight_decay": 0.0005471353529173753,
+     "loss": "huber",
+     "window": 20
+    },
+    "lstm": {
+     "hidden_size": 16,
+     "num_layers": 2,
+     "dropout": 0.39420785361354344,
+     "lr": 4.5433636220422486e-05,
+     "batch_size": 128,
+     "weight_decay": 1.3200760398194398e-05,
+     "loss": "huber",
+     "window": 20
+    },
+    "gru": {
+     "hidden_size": 32,
+     "num_layers": 1,
+     "dropout": 0.16897141606795027,
+     "lr": 3.7671556112893364e-05,
+     "batch_size": 256,
+     "weight_decay": 2.263224659742074e-06,
+     "loss": "huber",
+     "window": 20
+    }
+   },
+   "modelo_app": {
+    "nombre": "LSTM",
+    "celda": "lstm",
+    "peso": 1.0
+   },
+   "intervalo": {
+    "metodo": "conformal_vol",
+    "metodo_nombre": "Conformal escalado por volatilidad",
+    "q_inferior": -3.2030916241977123,
+    "q_superior": 2.9318344930887044
+   }
+  },
+  "medio": {
+   "h": 63,
+   "redes": {
+    "rnn": {
+     "hidden_size": 64,
+     "num_layers": 2,
+     "dropout": 0.46974947078209456,
+     "lr": 0.0006915678691715483,
+     "batch_size": 128,
+     "weight_decay": 3.87211803217458e-06,
+     "loss": "huber",
+     "window": 20
+    },
+    "lstm": {
+     "hidden_size": 64,
+     "num_layers": 1,
+     "dropout": 0.009652832803196704,
+     "lr": 0.0007243726620701918,
+     "batch_size": 128,
+     "weight_decay": 0.0005353066937718476,
+     "loss": "huber",
+     "window": 20
+    },
+    "gru": {
+     "hidden_size": 32,
+     "num_layers": 2,
+     "dropout": 0.01934336034900999,
+     "lr": 3.4738212404912234e-05,
+     "batch_size": 128,
+     "weight_decay": 0.00020033820478168585,
+     "loss": "huber",
+     "window": 20
+    }
+   },
+   "modelo_app": {
+    "nombre": "RNN simple ajustada",
+    "celda": "rnn",
+    "peso": 0.9
+   },
+   "intervalo": {
+    "metodo": "historico",
+    "metodo_nombre": "Histórico (precio de hoy)",
+    "q_inferior": -0.21129664318959276,
+    "q_superior": 0.23263255640192948
+   }
+  },
+  "largo": {
+   "h": 252,
+   "redes": {
+    "rnn": {
+     "hidden_size": 16,
+     "num_layers": 2,
+     "dropout": 0.03651320072760762,
+     "lr": 3.143156519261483e-05,
+     "batch_size": 256,
+     "weight_decay": 2.662721293596177e-06,
+     "loss": "huber",
+     "window": 20
+    },
+    "lstm": {
+     "hidden_size": 32,
+     "num_layers": 2,
+     "dropout": 0.19875515786343906,
+     "lr": 3.0225580238697848e-05,
+     "batch_size": 128,
+     "weight_decay": 4.653237899088624e-06,
+     "loss": "huber",
+     "window": 20
+    },
+    "gru": {
+     "hidden_size": 32,
+     "num_layers": 2,
+     "dropout": 0.058002258680277585,
+     "lr": 3.086841864900711e-05,
+     "batch_size": 128,
+     "weight_decay": 0.0001067226132203431,
+     "loss": "huber",
+     "window": 20
+    }
+   },
+   "modelo_app": {
+    "nombre": "LSTM ajustada",
+    "celda": "lstm",
+    "peso": 1.0
+   },
+   "intervalo": {
+    "metodo": "historico",
+    "metodo_nombre": "Histórico (precio de hoy)",
+    "q_inferior": -0.5153398226984737,
+    "q_superior": 0.5033778862868921
+   }
+  }
+ }
+}

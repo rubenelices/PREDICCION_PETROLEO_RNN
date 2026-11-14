@@ -60,16 +60,6 @@ def validation(round_: int) -> pd.DataFrame | None:
     return None
 
 
-def test(round_: int) -> pd.DataFrame | None:
-    """Relative RMSE on the hold-out test, long format (only rounds that ran it)."""
-    path = results_dir(round_) / "comparativa.csv"
-    if not path.exists():
-        return None
-    df = pd.read_csv(path)
-    df["rmse_relativo"] = 1 - df["Mejora_RMSE_vs_ingenuo_%"] / 100
-    return df[~df.modelo.isin(["Ingenuo", "Media histórica"])]
-
-
 def validation_table(round_: int, prudent: bool = False):
     df = validation(round_)
     if df is None:
@@ -80,62 +70,191 @@ def validation_table(round_: int, prudent: bool = False):
     return _style(_wide(df, "rmse_relativo"), f"Ronda {round_} · validación{note}")
 
 
-def test_table(round_: int, prudent: bool = False):
-    df = test(round_)
-    if df is None:
-        return None
-    if not prudent:
-        df = df[~df.modelo.str.endswith(PRUDENT)]
-    return _style(_wide(df, "rmse_relativo"), f"Ronda {round_} · test (2024-2026)")
-
-
 def _best(df: pd.DataFrame, hname: str) -> pd.Series:
     rows = df[(df.horizonte == hname) & (df.modelo != "Ridge")]
     return rows.loc[rows.rmse_relativo.idxmin()]
 
 
 def summary(rounds) -> pd.DataFrame:
-    """One row per round: best model in validation for each horizon, and its test if it was run."""
+    """One row per round: best network in validation for each horizon."""
     out = []
     for r in rounds:
-        val, tst = validation(r), test(r)
+        val = validation(r)
         if val is None:
             continue
+        val = val[~val.modelo.str.endswith(PRUDENT)]
         row = {"Ronda": r}
         for hname in HORIZONS:
             b = _best(val, hname)
             row[f"{H_LABELS[hname]} · mejor en validación"] = b.modelo
-            row[f"{H_LABELS[hname]} · val"] = b.rmse_relativo
-            t = None if tst is None else tst[(tst.horizonte == hname) & (tst.modelo == b.modelo)]
-            row[f"{H_LABELS[hname]} · test"] = t.rmse_relativo.item() if t is not None and len(t) else np.nan
+            row[f"{H_LABELS[hname]} · error"] = b.rmse_relativo
         out.append(row)
     return pd.DataFrame(out).set_index("Ronda")
 
 
 def summary_table(rounds):
     s = summary(rounds)
-    num = [c for c in s.columns if c.endswith(("· val", "· test"))]
+    num = [c for c in s.columns if c.endswith("· error")]
     return (s.style.format("{:.3f}", subset=num, na_rep="—")
             .background_gradient(cmap="RdYlGn_r", vmin=0.85, vmax=1.15, subset=num))
 
 
 def evolution_plot(rounds):
-    """Best network in validation per round and horizon, with its test when there is one."""
+    """Best network in validation per round and horizon."""
     s = summary(rounds)
     fig, axes = plt.subplots(1, 3, figsize=(13, 3.2), sharex=True)
     for ax, hname in zip(axes, HORIZONS):
         label = H_LABELS[hname]
         ax.axhline(1, color=COLORS["Ingenuo"], ls="--", lw=1)
-        ax.plot(s.index, s[f"{label} · val"], marker="o", color=INK_2, lw=2)
-        ax.scatter(s.index, s[f"{label} · test"], marker="D", s=60, facecolor="white", edgecolor=INK_2, lw=1.5,
-                   zorder=3)
+        ax.plot(s.index, s[f"{label} · error"], marker="o", color=INK_2, lw=2)
+        for r, v in s[f"{label} · error"].items():
+            ax.annotate(f"{v:.3f}", (r, v), textcoords="offset points", xytext=(0, 7), ha="center", fontsize=8)
         ax.set_title(label)
         ax.set_xticks(s.index, [f"R{r}" for r in s.index])
     axes[0].set_ylabel("error relativo al ingenuo")
-    handles = [Line2D([], [], color=INK_2, marker="o", lw=2, label="mejor en validación"),
-               Line2D([], [], color=INK_2, marker="D", ls="", markerfacecolor="white", label="ese modelo en el test"),
+    handles = [Line2D([], [], color=INK_2, marker="o", lw=2, label="mejor red en validación"),
                Line2D([], [], color=COLORS["Ingenuo"], ls="--", label="ingenuo")]
-    fig.legend(handles=handles, loc="upper center", ncol=3, bbox_to_anchor=(0.5, 1.08))
+    fig.legend(handles=handles, loc="upper center", ncol=2, bbox_to_anchor=(0.5, 1.08))
+    plt.tight_layout()
+    return fig
+
+
+def window_table(round_: int):
+    """Window decision of a search with a common window (round 5)."""
+    path = tuning_dir(round_) / "ventana_decision.json"
+    if not path.exists():
+        return None
+    d = json.loads(path.read_text())["horizontes"]
+    rows = []
+    for hname, h in HORIZONS.items():
+        for w, sc in d[str(h)]["puntuaciones"].items():
+            rows.append({"horizonte": H_LABELS[hname], "ventana": f"{w} días", **{n: sc[c] for c, n in
+                         zip(["rnn", "lstm", "gru"], NETS)}, "media 3 redes": sc["media_3_redes"],
+                         "elegida": "✓" if int(w) == d[str(h)]["ventana"] else ""})
+    t = pd.DataFrame(rows).set_index(["horizonte", "ventana"])
+    num = [*NETS, "media 3 redes"]
+    return (t.style.format("{:.3f}", subset=num).background_gradient(cmap="RdYlGn_r", vmin=0.85, vmax=1.15, subset=num)
+            .set_caption(f"Ronda {round_} · media de los 5 mejores intentos de cada búsqueda"))
+
+
+VARIANT_NAMES = {"base": "base (5 semillas)", "top3_x2": "top-3 × 2 semillas", "top5_x2": "top-5 × 2 semillas"}
+
+
+def variant_table(round_: int):
+    """Mean of the three networks per variant, raw and adjusted (variante_decision.json)."""
+    path = results_dir(round_) / "variante_decision.json"
+    if not path.exists():
+        return None
+    d = json.loads(path.read_text())["horizontes"]
+    rows = []
+    for hname, v in d.items():
+        for name, sc in v["puntuaciones"].items():
+            rows.append({"horizonte": H_LABELS[hname], "variante": VARIANT_NAMES.get(name, name),
+                         **{n: sc[c] for c, n in zip(["rnn", "lstm", "gru"], NETS)},
+                         "media 3 redes": sc["media_3_redes"], "media ajustada": sc["media_ajustada"],
+                         "elegida": "✓" + (" (ajustada)" if v["ajustada"] else "") if name == v["variante"] else ""})
+    t = pd.DataFrame(rows).set_index(["horizonte", "variante"])
+    num = [*NETS, "media 3 redes", "media ajustada"]
+    return (t.style.format("{:.3f}", subset=num).background_gradient(cmap="RdYlGn_r", vmin=0.85, vmax=1.15, subset=num)
+            .set_caption(f"Ronda {round_} · validación 2019-2023 de cada variante"))
+
+
+def final_model_table(round_: int) -> pd.DataFrame | None:
+    path = results_dir(round_) / "modelo_final.json"
+    if not path.exists():
+        return None
+    d = json.loads(path.read_text())["horizontes"]
+    return pd.DataFrame([{"horizonte": H_LABELS[k], "modelo de la app": v["modelo"], "peso": v["peso"],
+                          "validación 2019-2023": round(v["validacion_rmse_relativo"], 3),
+                          "años que gana": v["años_que_gana_al_ingenuo"]} for k, v in d.items()]).set_index("horizonte")
+
+
+def backward(round_: int) -> pd.DataFrame | None:
+    path = results_dir(round_) / "hacia_atras_resumen.csv"
+    return pd.read_csv(path) if path.exists() else None
+
+
+def backward_table(round_: int):
+    """Backward validation (2010-2018) next to the validation years, with the verdict of each model."""
+    b = backward(round_)
+    if b is None:
+        return None
+    b = b.assign(horizonte=b.horizonte.map(H_LABELS), app=np.where(b.modelo_app, "✓", ""))
+    t = b.set_index(["horizonte", "modelo"])[["peso", "media_2010_2018", "media_2019_2023", "media_todos",
+                                              "gana_todos", "veredicto", "app"]]
+    t.columns = ["peso", "2010-2018", "2019-2023", "todos los años", "años que gana", "veredicto", "app"]
+    num = ["2010-2018", "2019-2023", "todos los años"]
+    colors = {"se sostiene": "background-color: #d8eed9", "dudoso": "background-color: #fbefc9",
+              "no se sostiene": "background-color: #f6d5d0"}
+    return (t.style.format("{:.3f}", subset=num).format("{:.2f}", subset=["peso"])
+            .background_gradient(cmap="RdYlGn_r", vmin=0.85, vmax=1.15, subset=num)
+            .map(lambda v: colors.get(v, ""), subset=["veredicto"])
+            .set_caption(f"Ronda {round_} · validación hacia atrás"))
+
+
+def backward_plot(round_: int):
+    """Relative error per year (2010-2023) of the three networks, one panel per horizon."""
+    b = backward(round_)
+    if b is None:
+        return None
+    years = [c for c in b.columns if c.startswith("rel_")]
+    fig, axes = plt.subplots(1, 3, figsize=(15, 3.6), sharex=True)
+    for ax, hname in zip(axes, HORIZONS):
+        g = b[b.horizonte == hname]
+        ax.axvspan(2018.5, 2023.5, color="0.9", zorder=0)
+        ax.axhline(1, color=COLORS["Ingenuo"], ls="--", lw=1)
+        for net in NETS:
+            r = g[g.modelo == net][years].iloc[0]
+            x = [int(c[4:]) for c in years]
+            ax.plot(x, r.values, marker="o", ms=4, color=COLORS[net], lw=1.6, label=net)
+        ax.set_title(H_LABELS[hname])
+        ax.text(2014, 0.02, "hacia atrás", transform=ax.get_xaxis_transform(), ha="center", fontsize=8, color=INK_2)
+        ax.text(2021, 0.02, "validación", transform=ax.get_xaxis_transform(), ha="center", fontsize=8, color=INK_2)
+    axes[0].set_ylabel("error relativo al ingenuo")
+    axes[0].legend(fontsize=8, loc="upper left")
+    plt.tight_layout()
+    return fig
+
+
+METHOD_NAMES = {"historico": "Histórico (precio de hoy)", "conformal": "Conformal (errores del modelo)",
+                "conformal_vol": "Conformal escalado por volatilidad"}
+
+
+def interval_table(round_: int):
+    """Coverage, width and interval score of the three 80 % intervals, and the one chosen."""
+    path = results_dir(round_) / "intervalo_resumen.csv"
+    if not path.exists():
+        return None
+    s = pd.read_csv(path)
+    chosen = json.loads((results_dir(round_) / "intervalo_decision.json").read_text())["horizontes"]
+    s["elegido"] = ["✓" if chosen[h]["metodo"] == m else "" for h, m in zip(s.horizonte, s.metodo)]
+    s = s.assign(horizonte=s.horizonte.map(H_LABELS), metodo=s.metodo.map(METHOD_NAMES),
+                 cobertura=s.cobertura * 100)
+    t = s.set_index(["horizonte", "metodo"])[["cobertura", "anchura_pct", "puntuacion", "años", "elegido"]]
+    t.columns = ["cobertura (%)", "anchura (% del precio)", "puntuación ($)", "años", "elegido"]
+    return (t.style.format("{:.1f}", subset=["cobertura (%)", "anchura (% del precio)"])
+            .format("{:.2f}", subset=["puntuación ($)"])
+            .set_caption(f"Ronda {round_} · intervalo del 80 % (calibrado cada año solo con lo ya conocido)"))
+
+
+def interval_plot(round_: int):
+    """Coverage per year of each interval method; the band marks 75-85 %."""
+    path = results_dir(round_) / "intervalo_por_año.csv"
+    if not path.exists():
+        return None
+    y = pd.read_csv(path)
+    fig, axes = plt.subplots(1, 3, figsize=(15, 3.4), sharey=True)
+    styles = {"historico": ("0.55", "--"), "conformal": (COLORS["GRU"], ":"), "conformal_vol": (COLORS["LSTM"], "-")}
+    for ax, hname in zip(axes, HORIZONS):
+        ax.axhspan(75, 85, color="0.92", zorder=0)
+        ax.axhline(80, color=INK_2, lw=0.8)
+        for m, (c, ls) in styles.items():
+            g = y[(y.horizonte == hname) & (y.metodo == m)]
+            ax.plot(g["año"], g.cobertura * 100, marker="o", ms=4, color=c, ls=ls, lw=1.6, label=METHOD_NAMES[m])
+        ax.set_title(H_LABELS[hname])
+        ax.set_ylim(-3, 103)
+    axes[0].set_ylabel("cobertura (%)")
+    axes[0].legend(fontsize=8, loc="lower left")
     plt.tight_layout()
     return fig
 

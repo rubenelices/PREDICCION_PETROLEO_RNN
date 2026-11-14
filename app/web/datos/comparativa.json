@@ -1,0 +1,125 @@
+{
+ "fuente": "test 2024-2026",
+ "filas": [
+  {
+   "horizonte": "corto",
+   "h": 5,
+   "modelo": "Ingenuo",
+   "mae": 3.85,
+   "rmse": 5.82,
+   "mejora_pct": 0.0,
+   "parametros": 0,
+   "tiempo_s": null
+  },
+  {
+   "horizonte": "corto",
+   "h": 5,
+   "modelo": "RNN simple",
+   "mae": 3.83,
+   "rmse": 5.77,
+   "mejora_pct": 0.83,
+   "parametros": 561,
+   "tiempo_s": 1.2
+  },
+  {
+   "horizonte": "corto",
+   "h": 5,
+   "modelo": "LSTM",
+   "mae": 3.85,
+   "rmse": 5.81,
+   "mejora_pct": 0.14,
+   "parametros": 4369,
+   "tiempo_s": 7.1
+  },
+  {
+   "horizonte": "corto",
+   "h": 5,
+   "modelo": "GRU",
+   "mae": 3.83,
+   "rmse": 5.78,
+   "mejora_pct": 0.7,
+   "parametros": 4833,
+   "tiempo_s": 5.7
+  },
+  {
+   "horizonte": "medio",
+   "h": 63,
+   "modelo": "Ingenuo",
+   "mae": 12.83,
+   "rmse": 20.06,
+   "mejora_pct": 0.0,
+   "parametros": 0,
+   "tiempo_s": null
+  },
+  {
+   "horizonte": "medio",
+   "h": 63,
+   "modelo": "RNN simple",
+   "mae": 14.69,
+   "rmse": 22.27,
+   "mejora_pct": -11.02,
+   "parametros": 13633,
+   "tiempo_s": 2.8
+  },
+  {
+   "horizonte": "medio",
+   "h": 63,
+   "modelo": "LSTM",
+   "mae": 12.87,
+   "rmse": 19.5,
+   "mejora_pct": 2.81,
+   "parametros": 21057,
+   "tiempo_s": 3.0
+  },
+  {
+   "horizonte": "medio",
+   "h": 63,
+   "modelo": "GRU",
+   "mae": 12.79,
+   "rmse": 20.47,
+   "mejora_pct": -2.03,
+   "parametros": 11169,
+   "tiempo_s": 13.8
+  },
+  {
+   "horizonte": "largo",
+   "h": 252,
+   "modelo": "Ingenuo",
+   "mae": 19.76,
+   "rmse": 25.8,
+   "mejora_pct": 0.0,
+   "parametros": 0,
+   "tiempo_s": null
+  },
+  {
+   "horizonte": "largo",
+   "h": 252,
+   "modelo": "RNN simple",
+   "mae": 19.13,
+   "rmse": 24.63,
+   "mejora_pct": 4.53,
+   "parametros": 1105,
+   "tiempo_s": 4.7
+  },
+  {
+   "horizonte": "largo",
+   "h": 252,
+   "modelo": "LSTM",
+   "mae": 19.9,
+   "rmse": 24.07,
+   "mejora_pct": 6.71,
+   "parametros": 14881,
+   "tiempo_s": 9.2
+  },
+  {
+   "horizonte": "largo",
+   "h": 252,
+   "modelo": "GRU",
+   "mae": 17.43,
+   "rmse": 24.2,
+   "mejora_pct": 6.19,
+   "parametros": 11169,
+   "tiempo_s": 7.8
+  }
+ ]
+}

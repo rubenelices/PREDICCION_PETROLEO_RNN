@@ -1,0 +1,73 @@
+{
+ "modelo": "LSTM a 1 semana y 1 año · RNN simple a 3 meses",
+ "fecha_dato": "2026-11-03",
+ "precio_hoy": 107.03,
+ "precio_anterior": 107.39,
+ "horizontes": {
+  "corto": {
+   "dias_habiles": 5,
+   "fecha_objetivo": "2026-11-10",
+   "precio": 106.24,
+   "variacion_pct": -0.74,
+   "rango80": [
+    94.14,
+    118.68
+   ],
+   "modelo": "LSTM",
+   "red": "LSTM",
+   "intervalo": "Conformal escalado por volatilidad",
+   "mejora_vs_ingenuo_pct": 0.14,
+   "mejora_mae_vs_ingenuo_pct": 0.05,
+   "direccion_pct": 51.9
+  },
+  "medio": {
+   "dias_habiles": 63,
+   "fecha_objetivo": "2027-01-29",
+   "precio": 104.45,
+   "variacion_pct": -2.41,
+   "rango80": [
+    86.64,
+    135.06
+   ],
+   "modelo": "RNN simple ajustada",
+   "red": "RNN simple",
+   "intervalo": "Histórico (precio de hoy)",
+   "mejora_vs_ingenuo_pct": -9.45,
+   "mejora_mae_vs_ingenuo_pct": -11.11,
+   "direccion_pct": 54.9
+  },
+  "largo": {
+   "dias_habiles": 252,
+   "fecha_objetivo": "2027-10-21",
+   "precio": 105.16,
+   "variacion_pct": -1.75,
+   "rango80": [
+    63.93,
+    177.06
+   ],
+   "modelo": "LSTM ajustada",
+   "red": "LSTM",
+   "intervalo": "Histórico (precio de hoy)",
+   "mejora_vs_ingenuo_pct": 6.71,
+   "mejora_mae_vs_ingenuo_pct": -0.71,
+   "direccion_pct": 51.3
+  }
+ },
+ "redes": {
+  "RNN simple": {
+   "corto": 106.24,
+   "medio": 104.16,
+   "largo": 102.15
+  },
+  "LSTM": {
+   "corto": 106.24,
+   "medio": 102.71,
+   "largo": 105.16
+  },
+  "GRU": {
+   "corto": 105.67,
+   "medio": 105.93,
+   "largo": 108.95
+  }
+ }
+}

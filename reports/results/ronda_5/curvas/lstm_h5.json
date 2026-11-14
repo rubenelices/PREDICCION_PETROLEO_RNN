@@ -1,0 +1,40 @@
+{
+  "red": "LSTM",
+  "cell": "lstm",
+  "h": 5,
+  "horizonte": "1 semana",
+  "ronda_ajuste": 5,
+  "semilla": 0,
+  "config": {
+    "hidden_size": 16,
+    "num_layers": 2,
+    "dropout": 0.39420785361354344,
+    "lr": 4.5433636220422486e-05,
+    "batch_size": 128,
+    "weight_decay": 1.3200760398194398e-05,
+    "loss": "huber",
+    "max_epochs": 150,
+    "patience": 15,
+    "window": 20,
+    "half_life": null,
+    "linear_skip": false,
+    "features": null
+  },
+  "n_params": 4369,
+  "epocas": 77,
+  "mejor_epoca": 62,
+  "tiempo_s": 13.67334683300578,
+  "train_rel_mejor": 0.9848916009565114,
+  "val_rel_mejor": 0.9965780775562921,
+  "val_rel_ajuste": 0.9950086853947487,
+  "periodo_aprende": [
+    "2002-01",
+    "2020-10"
+  ],
+  "periodo_valida": [
+    "2020-10",
+    "2023-12"
+  ],
+  "n_aprende": 4555,
+  "n_valida": 809
+}
