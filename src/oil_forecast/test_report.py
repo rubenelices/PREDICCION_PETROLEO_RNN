@@ -15,7 +15,8 @@ from oil_forecast.config import CURRENT_ROUND, HORIZONS, results_dir
 from oil_forecast.data import load_dataset
 from oil_forecast.experiment_log import H_LABELS, METHOD_NAMES, NETS
 from oil_forecast.intervals import volatility
-from oil_forecast.plotting import COLORS, INK_2
+from oil_forecast.metrics import bootstrap_block, bootstrap_skill
+from oil_forecast.plotting import COLORS, INK, INK_2
 
 BASELINES = ["Ingenuo", "Media histórica", "Ridge"]
 SHOCK_START = pd.Timestamp("2026-02-28")  # start of the war with Iran (Strait of Hormuz)
@@ -36,7 +37,7 @@ def load(round_: int = CURRENT_ROUND) -> dict:
 
 def final_name(f: dict) -> str:
     """Name of a final model; with weight 1 the adjusted version is the network itself."""
-    return f["red"] if f["peso"] == 1 else f"{f['modelo']} (peso {f['peso']:g})"
+    return f["red"] if f["peso"] == 1 else f"{f['red']} (peso {f['peso']:g})".replace(".", ",")
 
 
 def _relative(comp: pd.DataFrame) -> pd.Series:
@@ -44,17 +45,46 @@ def _relative(comp: pd.DataFrame) -> pd.Series:
     return comp.RMSE / comp.horizonte.map(naive)
 
 
+def skill_ci(r: dict, hname: str, model: str, level: float = 0.95) -> tuple[float, float]:
+    """Block-bootstrap interval of the RMSE improvement over the naive model, from the test predictions."""
+    p = r["preds"][r["preds"].horizonte == hname]
+    naive = p[p.modelo == "Ingenuo"].set_index("origen").sort_index()
+    q = p[p.modelo == model].set_index("origen").loc[naive.index]
+    block = bootstrap_block(HORIZONS[hname], len(naive))
+    return bootstrap_skill(naive.precio_real, q.precio_pred, naive.precio_pred, block=block, level=level)
+
+
+def _ci_text(low: float, high: float) -> str:
+    return f"[{low:+.1f}; {high:+.1f}]"
+
+
+def dollar_table(r: dict) -> pd.DataFrame:
+    """Error per barrel (USD) of the naive forecast, the final model and the three networks, per horizon."""
+    comp = r["comp"].set_index(["horizonte", "modelo"])
+    rows = []
+    for hname, f in r["final"].items():
+        naive, final = comp.loc[(hname, "Ingenuo")], comp.loc[(hname, f["modelo"])]
+        rows.append({
+            "Plazo": H_LABELS[hname], "Modelo final": final_name(f),
+            "RMSE ingenuo": naive.RMSE, "RMSE final": final.RMSE,
+            "MAE ingenuo": naive.MAE, "MAE final": final.MAE,
+            **{f"RMSE {net}": comp.loc[(hname, net), "RMSE"] for net in NETS},
+        })
+    return pd.DataFrame(rows).set_index("Plazo")
+
+
 def comparison_table(r: dict):
     """The table the brief asks for: baselines, the three networks and their combination, per horizon."""
     comp = r["comp"]
     keep = BASELINES + NETS + ["Combinación"]
     t = comp[comp.modelo.isin(keep)].assign(rel=_relative(comp))
+    ci = [_ci_text(*skill_ci(r, h, m)) if m != "Ingenuo" else "—" for h, m in zip(t.horizonte, t.modelo)]
     t = pd.DataFrame({
         "horizonte": pd.Categorical(t.horizonte.map(H_LABELS), list(H_LABELS.values()), ordered=True),
         "modelo": pd.Categorical(t.modelo, keep, ordered=True),
         "MAE ($)": t.MAE, "RMSE ($)": t.RMSE, "RMSE / ingenuo": t.rel,
-        "Mejora RMSE %": t["Mejora_RMSE_vs_ingenuo_%"], "Mejora MAE %": t["Mejora_MAE_vs_ingenuo_%"],
-        "Dirección %": t["Direccion_%"], "p-valor DM": t.DM_p_valor,
+        "Mejora RMSE %": t["Mejora_RMSE_vs_ingenuo_%"], "IC 95 % mejora": ci,
+        "Mejora MAE %": t["Mejora_MAE_vs_ingenuo_%"], "Dirección %": t["Direccion_%"], "p-valor DM": t.DM_p_valor,
         "Parámetros": t.n_params, "Tiempo (s)": t.tiempo_entrenamiento_s,
         "Desv. semillas (pp)": t.Mejora_RMSE_desv_semillas,
     }).sort_values(["horizonte", "modelo"]).set_index(["horizonte", "modelo"])
@@ -88,7 +118,8 @@ def final_table(r: dict) -> pd.DataFrame:
         rows.append({
             "Horizonte": H_LABELS[hname], "Modelo": f["red"], "Peso": f["peso"],
             "Validación 2019-2023": f["validacion_rmse_relativo"], "Test 2024-2026": row.rel,
-            "Mejora RMSE %": row["Mejora_RMSE_vs_ingenuo_%"], "p-valor DM": row.DM_p_valor,
+            "Mejora RMSE %": row["Mejora_RMSE_vs_ingenuo_%"], "IC 95 % mejora": _ci_text(*skill_ci(r, hname, f["modelo"])),
+            "Mejora MAE %": row["Mejora_MAE_vs_ingenuo_%"], "p-valor DM": row.DM_p_valor,
             "Intervalo 80 %": METHOD_NAMES[r["interval"][hname]["metodo"]],
             "Cobertura test %": iv.dentro.mean() * 100,
             "Anchura media ($)": (iv.superior - iv.inferior).mean(),
@@ -125,25 +156,36 @@ def coverage_table(r: dict) -> pd.DataFrame:
 
 
 def comparison_plot(r: dict):
-    """Bars: RMSE improvement over the naive forecast of each network and the linear model."""
+    """Error per barrel (RMSE, USD) of each network and the linear model against the naive forecast.
+
+    All panels share the dollar axis, so a 0.8 % gain at one week looks as small as it is.
+    """
     comp = r["comp"]
-    fig, axes = plt.subplots(1, 3, figsize=(13, 3.4), sharey=True)
+    names = ["Ingenuo", *NETS, "Ridge"]
+
+    def num(v, fmt):
+        return format(v, fmt).replace(".", ",").replace("-", "−")
+
+    fig, axes = plt.subplots(1, 3, figsize=(13.5, 3.9), sharex=True)
     for ax, hname in zip(axes, HORIZONS):
         g = comp[comp.horizonte == hname].set_index("modelo")
-        names = [*NETS, "Ridge"]
-        vals = [g.loc[n, "Mejora_RMSE_vs_ingenuo_%"] for n in names]
-        bars = ax.barh(names, vals, color=[COLORS[n] for n in names], height=0.6)
-        ax.axvline(0, color=COLORS["Ingenuo"], ls="--", lw=1)
-        for b, v in zip(bars, vals):
-            ax.text(v + (0.3 if v >= 0 else -0.3), b.get_y() + b.get_height() / 2, f"{v:+.1f} %",
-                    va="center", ha="left" if v >= 0 else "right", fontsize=9)
-        lim = max(5, max(abs(v) for v in vals) * 1.45)
-        ax.set_xlim(-lim, lim)
-        final = r["final"][hname]["red"]
-        ax.set_title(f"{H_LABELS[hname]} · modelo final: {final_name(r['final'][hname])}", color=COLORS[final], fontsize=10)
+        f = r["final"][hname]
+        vals = [g.loc[n, "RMSE"] for n in names]
+        bars = ax.barh(names, vals, height=0.62, color=[COLORS[n] for n in names],
+                       edgecolor=[INK if n == f["red"] else "none" for n in names], linewidth=1.4)
+        ax.axvline(g.loc["Ingenuo", "RMSE"], color=COLORS["Ingenuo"], ls="--", lw=1)
+        for b, n, v in zip(bars, names, vals):
+            gain = "" if n == "Ingenuo" else f" ({num(g.loc[n, 'Mejora_RMSE_vs_ingenuo_%'], '+.1f')} %)"
+            ax.text(v + 0.4, b.get_y() + b.get_height() / 2, f"{num(v, '.2f')} ${gain}", va="center", fontsize=8.5)
+        final = g.loc[f["modelo"]]
+        ax.set_title(f"{H_LABELS[hname]}\nfinal: {final_name(f)} · {num(final.RMSE, '.2f')} $ "
+                     f"({num(final['Mejora_RMSE_vs_ingenuo_%'], '+.1f')} %)", fontsize=10, loc="left")
+        ax.set_yticks(range(len(names)), [f"{n} ★" if n == f["red"] else n for n in names])
         ax.grid(axis="y", visible=False)
-    axes[0].invert_yaxis()
-    axes[1].set_xlabel("mejora del RMSE frente al ingenuo en el test (%; a la derecha, mejor)")
+        ax.set_axisbelow(True)
+        ax.invert_yaxis()
+    axes[0].set_xlim(0, 33)
+    axes[1].set_xlabel("RMSE en el test ($ por barril; más corto, mejor) · ★ red del modelo final · línea: ingenuo")
     plt.tight_layout()
     return fig
 

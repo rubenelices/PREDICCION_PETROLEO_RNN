@@ -78,6 +78,34 @@ def diebold_mariano(e_model, e_naive, horizon: int) -> tuple[float, float]:
     return float(dm), float(p)
 
 
+def bootstrap_skill(y_true, y_pred, y_naive, block: int, n_boot: int = 2000, level: float = 0.95,
+                    seed: int = 0) -> tuple[float, float]:
+    """Confidence interval of the RMSE improvement over the naive model (in %), by circular block bootstrap.
+
+    Forecasts made on consecutive days share most of their target window, so their
+    errors are correlated; resampling whole blocks of ``block`` consecutive origins
+    keeps that dependence. With few blocks (e.g. one-year forecasts over a short
+    test) the interval is only indicative. Returns (lower, upper) bounds.
+    """
+    e_model = (np.asarray(y_true) - np.asarray(y_pred)) ** 2
+    e_naive = (np.asarray(y_true) - np.asarray(y_naive)) ** 2
+    n = len(e_model)
+    block = int(min(max(block, 1), n))
+    n_blocks = int(np.ceil(n / block))
+    rng = np.random.default_rng(seed)
+    starts = rng.integers(0, n, size=(n_boot, n_blocks))
+    idx = ((starts[:, :, None] + np.arange(block)) % n).reshape(n_boot, -1)[:, :n]
+    skills = (1 - np.sqrt(e_model[idx].mean(axis=1) / e_naive[idx].mean(axis=1))) * 100
+    alpha = (1 - level) / 2
+    low, high = np.quantile(skills, [alpha, 1 - alpha])
+    return float(low), float(high)
+
+
+def bootstrap_block(horizon: int, n: int) -> int:
+    """Block length for :func:`bootstrap_skill`: at least the horizon (the overlap of the targets)."""
+    return max(horizon, int(np.ceil(n ** (1 / 3))))
+
+
 def evaluate_forecast(price: np.ndarray, horizon: int, origins: np.ndarray, log_return_pred) -> dict:
     """All metrics for h-day log-return forecasts made at ``origins``.
 

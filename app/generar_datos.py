@@ -58,6 +58,12 @@ def model_summary(spec: dict) -> str:
     return " · ".join(f"{net} a {' y '.join(hs)}" for net, hs in by_net.items())
 
 
+def display_name(s: dict) -> str:
+    """Name shown for the app model of a horizon: with weight 1 the adjusted version is the network itself."""
+    m = s["modelo_app"]
+    return NAMES[m["celda"]] if m["peso"] == 1 else m["nombre"]
+
+
 def test_metrics(spec: dict) -> dict | None:
     """Test metrics of the app model of each horizon (None outside the repository)."""
     path = results_dir(CURRENT_ROUND) / "comparativa.csv"
@@ -97,7 +103,7 @@ def write_test_files(spec: dict) -> None:
         q = pred[(pred.horizonte == k) & (pred.modelo == name)].sort_values("fecha_objetivo")
         hit = ((q.precio_pred - q.precio_hoy) * (q.precio_real - q.precio_hoy) > 0).mean()
         backtest["horizontes"][k] = {
-            "modelo": name, "fechas": q.fecha_objetivo.tolist(), "real": q.precio_real.round(2).tolist(),
+            "modelo": display_name(s), "fechas": q.fecha_objetivo.tolist(), "real": q.precio_real.round(2).tolist(),
             "previsto": q.precio_pred.round(2).tolist(),
             "error_medio": round(float((q.precio_real - q.precio_pred).abs().mean()), 2),
             "error_medio_ingenuo": round(float((q.precio_real - q.precio_hoy).abs().mean()), 2),
@@ -177,7 +183,7 @@ def write_data_files(spec: dict) -> None:
         prev["horizontes"][k] = {
             "dias_habiles": f["h"], "fecha_objetivo": f"{pd.bdate_range(hoy, periods=f['h'] + 1)[-1]:%Y-%m-%d}",
             "precio": round(f["precio"], 2), "variacion_pct": round(float(np.expm1(f["retorno"]) * 100), 2),
-            "rango80": [round(x, 2) for x in f["rango80"]], "modelo": s["modelo_app"]["nombre"],
+            "rango80": [round(x, 2) for x in f["rango80"]], "modelo": display_name(s),
             "red": NAMES[s["modelo_app"]["celda"]], "intervalo": s["intervalo"]["metodo_nombre"], **metrics[k],
         }
         for c, v in f["redes"].items():
