@@ -74,4 +74,4 @@
 # ==========================
 # The notebooks are the analysis report: their embedded figures would make
 # them ~90 % of the bytes, so they count as documentation, not as code.
-*.ipynb  linguist-documentation
+*.ipynb  linguist-documentation linguist-detectable=false
