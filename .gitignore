@@ -244,6 +244,5 @@ reports/results/**/pesos*.json
 # Exported figures (the notebooks draw them)
 reports/figures/
 
-# Web prototype, developed separately
-PROTOTIPO_WEB/
+# Folder uploaded to the Hugging Face Space (scripts/preparar_space.py)
 build/
