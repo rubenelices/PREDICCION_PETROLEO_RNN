@@ -468,15 +468,19 @@ html[data-vista="panel"] { --asoma: 0px; }
 html[data-vista="panel"] .cabecera { overflow: visible; overflow-x: clip; }
 html[data-vista="panel"] main { position: relative; z-index: 1; }
 html[data-vista="panel"] #crudo { visibility: hidden; }
-.portada { position: relative; display: grid; grid-template-rows: 1fr auto; min-height: calc(min(100svh, 1000px) - 68px); }
+/* --lejos encoge la foto hacia el horizonte de la derecha: menos de 1 aleja la plataforma. --mar la sube
+   (en % de su alto) para que se vea mar debajo. La capa de la llama lleva la misma transformación, así
+   que el resplandor sigue encima de la antorcha */
+.portada { --lejos: .8; --mar: 9%; position: relative; display: grid; grid-template-rows: 1fr auto; min-height: calc(min(100svh, 1000px) - 68px); }
 .portada > .envoltura, .portada-cinta > .envoltura { width: 100%; }
 .portada-img { position: absolute; left: 0; right: 0; top: -68px; width: 100%; height: calc(100% + 68px + 170px); object-fit: cover; object-position: 100% 42%; z-index: -1;
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 60%, transparent 100%); mask-image: linear-gradient(180deg, #000 0%, #000 60%, transparent 100%);
-  transform-origin: 70% 50%; transform: translate3d(calc(var(--px, 0) * -10px), calc(var(--py, 0) * -6px), 0) scale(1.04); transition: transform 1.2s cubic-bezier(.2, .7, .2, 1); animation: revelar 1.6s ease-out both; }
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 12%, #000 74%, transparent 100%), linear-gradient(90deg, transparent 0%, #000 18%); -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(180deg, transparent 0%, #000 12%, #000 74%, transparent 100%), linear-gradient(90deg, transparent 0%, #000 18%); mask-composite: intersect;
+  transform-origin: 100% 74%; transform: translate3d(calc(var(--px, 0) * -10px), calc(var(--py, 0) * -6px - var(--mar)), 0) scale(calc(1.04 * var(--lejos))); transition: transform 1.2s cubic-bezier(.2, .7, .2, 1); animation: revelar 1.6s ease-out both; }
 /* la llama, viva: un resplandor que titila sobre la antorcha de la foto y unas chispas que suben.
    Esta capa ocupa lo mismo que la foto y se mueve con ella; panel.js coloca el punto de la llama */
 .portada-fx { position: absolute; left: 0; right: 0; top: -68px; width: 100%; height: calc(100% + 68px + 170px); z-index: -1; pointer-events: none;
-  transform-origin: 70% 50%; transform: translate3d(calc(var(--px, 0) * -10px), calc(var(--py, 0) * -6px), 0) scale(1.04); transition: transform 1.2s cubic-bezier(.2, .7, .2, 1); }
+  transform-origin: 100% 74%; transform: translate3d(calc(var(--px, 0) * -10px), calc(var(--py, 0) * -6px - var(--mar)), 0) scale(calc(1.04 * var(--lejos))); transition: transform 1.2s cubic-bezier(.2, .7, .2, 1); }
 .llama { position: absolute; left: var(--lx, 80%); top: var(--ly, 20%); width: 0; height: 0; }
 .llama::before { content: ''; position: absolute; width: var(--ld, 300px); height: var(--ld, 300px); left: calc(var(--ld, 300px) / -2); top: calc(var(--ld, 300px) / -2); border-radius: 50%;
   background: radial-gradient(circle, rgba(255, 176, 70, .42) 0%, rgba(255, 128, 36, .16) 34%, transparent 66%); mix-blend-mode: screen; animation: titilar 3.4s ease-in-out infinite; }
@@ -574,8 +578,8 @@ html[data-vista="panel"] .cabecera::after { background: linear-gradient(90deg, r
 @media (prefers-reduced-motion: reduce) {
   .portada .entra, .portada-img, .llama::before, .bajar svg { animation: none; }
   .llama i { display: none; }
-  .portada-fx { transition: none; transform: none; }
-  .portada-img { transition: none; transform: none; }
+  .portada-fx { transition: none; transform: translateY(calc(-1 * var(--mar))) scale(var(--lejos)); }
+  .portada-img { transition: none; transform: translateY(calc(-1 * var(--mar))) scale(var(--lejos)); }
 }
 
 /* ---------- terminal: herramientas de análisis ---------- */
