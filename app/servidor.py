@@ -11,6 +11,7 @@ Run locally:
     poetry run uvicorn app.servidor:app --port 7860
 """
 
+import re
 import subprocess
 import sys
 import threading
@@ -18,7 +19,7 @@ from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from oil_forecast.app_model import train_app_models
@@ -94,10 +95,30 @@ def status():
     return state
 
 
+# Page code (HTML, JS, CSS) is served with a version stamp in every "?v=" of its links and
+# imports: the newest modification time of those files. Any edit changes the stamp, so the
+# browser always loads the new files and can never reuse a stale copy; the page itself is
+# never cached. Data are never cached either; textures keep the default caching.
+VERSION_RE = re.compile(r"\?v=[0-9A-Za-z]+")
+CODE_TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8"}
+
+
+def code_version() -> str:
+    return str(int(max(p.stat().st_mtime for p in WEB_DIR.iterdir() if p.suffix in CODE_TYPES)))
+
+
 @app.middleware("http")
-async def no_cache_data(request, call_next):
+async def versioned_code(request, call_next):
+    path = request.url.path
+    if request.method == "GET" and not path.startswith(("/api/", "/datos/")):
+        name = "index.html" if path == "/" else path.lstrip("/")
+        file = (WEB_DIR / name).resolve()
+        if file.suffix in CODE_TYPES and file.parent == WEB_DIR and file.is_file():
+            text = VERSION_RE.sub(f"?v={code_version()}", file.read_text(encoding="utf-8"))
+            cache = "no-store" if file.suffix == ".html" else "no-cache"
+            return Response(text, media_type=CODE_TYPES[file.suffix], headers={"Cache-Control": cache})
     response = await call_next(request)
-    if request.url.path.startswith("/datos/"):
+    if path.startswith("/datos/"):
         response.headers["Cache-Control"] = "no-store"
     return response
 

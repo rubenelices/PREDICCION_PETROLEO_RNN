@@ -5,7 +5,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { montar, estado, datosHistoria } from './contenido.js';
+import { montar, estado, datosHistoria } from './contenido.js?v=20261115';
 import Lenis from 'lenis';
 
 // ---------------------------------------------------------------------------

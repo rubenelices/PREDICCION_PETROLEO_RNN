@@ -1,4 +1,4 @@
-import { nivel } from './fiabilidad.js';
+import { nivel } from './fiabilidad.js?v=20261115';
 // Capa de contenido: guion de paradas, paneles y gráficas sobre la escena 3D.
 // Los datos vienen de datos/*.json; con el backend de Python serán los mismos JSON servidos por FastAPI.
 
@@ -38,7 +38,8 @@ const GUION = [
   { tipo: 'parada', k: 0, alto: 100, panel: 'portada', hasta: [3, 0.6] },
   { tipo: 'viaje', a: 1, alto: 70 },
   { tipo: 'parada', k: 1, alto: 100, panel: 'plazos', hasta: [3, 0.6] },
-  { tipo: 'viaje', a: 3, alto: 110 },
+  // el cruce del suelo es corto: así no queda un tramo oscuro y sin texto antes de la primera capa
+  { tipo: 'viaje', a: 3, alto: 70 },
   { tipo: 'parada', k: 3, alto: 80, panel: 'bajada' },
   ...ERAS.flatMap((_, i) => [
     { tipo: 'viaje', a: K_ERA0 + i, alto: 45 },
@@ -183,25 +184,35 @@ function panelFiabilidad() {
   const filas = datos.comparativa.filas;
   const H = [['corto', '1 semana'], ['medio', '3 meses'], ['largo', '1 año']];
   const redes = ['RNN simple', 'LSTM', 'GRU'];
-  const max = Math.max(...filas.filter(f => redes.includes(f.modelo)).map(f => Math.abs(f.mejora_pct)));
-  const celda = f => {
+  // misma forma que en el panel: RMSE relativo a no usar modelo, dicho con palabras
+  const frente = v => (Math.abs(v) < 0.05 ? 'igual' : `${fmt1.format(Math.abs(v))} % ${v > 0 ? 'menos' : 'más'}`);
+  const nombre = m => m.replace(/^(.*), peso (.*)$/, '$1 ajustada');
+  const max = Math.max(...filas.filter(f => f.modelo !== 'Ingenuo').map(f => Math.abs(f.mejora_pct)));
+  const barra = f => {
     const w = (Math.abs(f.mejora_pct) / max) * 50;
-    return `<td><div class="barra-div" title="${pct(f.mejora_pct)}"><span class="${f.mejora_pct >= 0 ? 'pos' : 'neg'}" style="${f.mejora_pct >= 0 ? 'left:50%' : `left:${50 - w}%`};width:${w}%"></span></div><span class="valor">${pct(f.mejora_pct)}</span></td>`;
+    return `<div class="barra-div" aria-hidden="true"><span class="${f.mejora_pct >= 0 ? 'pos' : 'neg'}" style="${f.mejora_pct >= 0 ? 'left:50%' : `left:${50 - w}%`};width:${w}%"></span></div>`;
   };
+  const celda = f => `<td${f.final ? ' class="elegida"' : ''}>${barra(f)}<span class="valor">${frente(f.mejora_pct)}</span></td>`;
   const busca = (h, m) => filas.find(f => f.horizonte === h && f.modelo === m);
+  const final = h => filas.find(f => f.horizonte === h && f.final);
+  // la frase sale de los datos: qué red se eligió en cada plazo
+  const porRed = {};
+  for (const [h, n] of H) { const f = final(h); (porRed[nombre(f.modelo)] ??= []).push(n === '1 semana' ? 'a una semana' : n === '3 meses' ? 'a tres meses' : 'a un año'); }
+  const eleccion = Object.entries(porRed).map(([r, hs]) => `la <strong>${r}</strong> ${hs.join(' y ')}`).join(' y ');
+  const ajustada = filas.find(f => f.final && f.modelo.includes(', peso'));
   return html`
     <h2>¿Me puedo fiar?</h2>
-    <p>Probamos tres tipos de red neuronal con los mismos datos, del 2024 a hoy, y las comparamos con lo más sencillo: suponer que el precio no cambia. Si la barra va a la derecha, la red se equivoca menos; si va a la izquierda, más.</p>
+    <p>Probamos tres tipos de red neuronal con los mismos datos, de 2024 a hoy, y las comparamos con lo más sencillo: suponer que el precio no cambia. Cada celda dice cuánto error tiene la red frente a eso: barra a la derecha, menos error; a la izquierda, más.</p>
     <table class="comparativa">
-      <thead><tr><th scope="col">Plazo</th>${redes.map(r => `<th scope="col"${r === 'LSTM' ? ' class="elegida"' : ''}>${r}${r === 'LSTM' ? ' <small>elegida</small>' : ''}</th>`).join('')}</tr></thead>
-      <tbody>${H.map(([h, n]) => `<tr><th scope="row">${n}</th>${redes.map(r => celda(busca(h, r))).join('')}</tr>`).join('')}</tbody>
+      <thead><tr><th scope="col">Plazo</th>${redes.map(r => `<th scope="col">${r}</th>`).join('')}<th scope="col" class="elegida">Elegido</th></tr></thead>
+      <tbody>${H.map(([h, n]) => `<tr><th scope="row">${n}</th>${redes.map(r => celda(busca(h, r))).join('')}<td class="elegida"><strong>${nombre(final(h).modelo)}</strong><span class="valor">${frente(final(h).mejora_pct)}</span></td></tr>`).join('')}</tbody>
     </table>
-    <p>Nos quedamos con la <strong>LSTM</strong> porque nunca se hunde: en su peor plazo se equivoca un 1 % más, mientras que las otras llegan a un 15 % y un 24 % más.</p>
+    <p>El modelo de cada plazo se eligió con una regla fijada de antemano y solo con los años de validación (2019-2023): ${eleccion}.${ajustada ? ` La versión ajustada modera los cambios que predice la red multiplicándolos por ${ajustada.modelo.split('peso ')[1]}.` : ''} Las cifras de esta tabla son las de las pruebas, que ninguna red vio al aprender.</p>
     <details>
       <summary>Ver el detalle técnico</summary>
       <table class="tecnica">
         <thead><tr><th scope="col">Plazo</th><th scope="col">Modelo</th><th scope="col">MAE ($)</th><th scope="col">RMSE ($)</th><th scope="col">Parámetros</th><th scope="col">Entrenamiento</th></tr></thead>
-        <tbody>${filas.map(f => `<tr><td>${H.find(x => x[0] === f.horizonte)[1]}</td><td>${f.modelo}</td><td>${fmt.format(f.mae)}</td><td>${fmt.format(f.rmse)}</td><td>${f.parametros.toLocaleString('es-ES')}</td><td>${f.tiempo_s == null ? '—' : `${fmt.format(f.tiempo_s)} s`}</td></tr>`).join('')}</tbody>
+        <tbody>${filas.map(f => `<tr><td>${H.find(x => x[0] === f.horizonte)[1]}</td><td>${f.modelo === 'Ingenuo' ? 'Sin modelo' : f.modelo.replace(/, peso (.*)$/, ' ajustada (peso $1)')}${f.final ? ' <small>elegido</small>' : ''}</td><td>${fmt.format(f.mae)}</td><td>${fmt.format(f.rmse)}</td><td>${f.parametros.toLocaleString('es-ES')}</td><td>${f.tiempo_s == null ? '—' : `${fmt.format(f.tiempo_s)} s`}</td></tr>`).join('')}</tbody>
       </table>
     </details>`;
 }

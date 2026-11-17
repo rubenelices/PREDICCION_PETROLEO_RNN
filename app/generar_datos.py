@@ -5,7 +5,8 @@ Two kinds of files:
   data are updated or the models retrained): historico, eventos, prediccion,
   mercado, activos, comparar, velas, estado;
 - from the test of the final round (only when its results are available,
-  i.e. when run inside the repository): comparativa, backtest.
+  i.e. when run inside the repository): comparativa, backtest;
+- from the training and validation reports of the final round (same condition): resultados.
 
 Usage:
     poetry run python app/generar_datos.py
@@ -76,8 +77,9 @@ def test_metrics(spec: dict) -> dict | None:
     for k, s in spec["horizontes"].items():
         row = comp[(comp.horizonte == k) & (comp.modelo == s["modelo_app"]["nombre"])].iloc[0]
         naive = comp[(comp.horizonte == k) & (comp.modelo == "Ingenuo")].iloc[0]
-        out[k] = {"mejora_vs_ingenuo_pct": round(float(row["Mejora_RMSE_vs_ingenuo_%"]), 2),
-                  "mejora_mae_vs_ingenuo_pct": round(float((1 - row.MAE / naive.MAE) * 100), 2),
+        # one decimal, as in the README (with two, -9.446 became -9.45 and the web showed 9,5)
+        out[k] = {"mejora_vs_ingenuo_pct": round(float(row["Mejora_RMSE_vs_ingenuo_%"]), 1),
+                  "mejora_mae_vs_ingenuo_pct": round(float((1 - row.MAE / naive.MAE) * 100), 1),
                   "direccion_pct": round(float(row["Direccion_%"]), 1)}
     return out
 
@@ -89,12 +91,23 @@ def write_test_files(spec: dict) -> None:
         return
     comp = pd.read_csv(out / "comparativa.csv")
     pred = pd.read_csv(out / "predicciones_test.csv")
+    def fila(f, modelo: str, final: bool) -> dict:
+        return {"horizonte": f.horizonte, "h": int(f.h), "modelo": modelo, "final": final, "mae": round(f.MAE, 2),
+                "rmse": round(f.RMSE, 2), "mejora_pct": round(f["Mejora_RMSE_vs_ingenuo_%"], 1),
+                "parametros": int(f.n_params),
+                "tiempo_s": None if pd.isna(f.get("tiempo_entrenamiento_s")) else round(f.tiempo_entrenamiento_s, 1)}
+
+    # the three networks as trained, plus the app model of each horizon marked as final;
+    # when the app model is an adjusted network (weight < 1) it gets its own row
     filas = []
-    for _, f in comp[comp.modelo.isin(["Ingenuo", *NAMES.values()])].iterrows():
-        filas.append({"horizonte": f.horizonte, "h": int(f.h), "modelo": f.modelo, "mae": round(f.MAE, 2),
-                      "rmse": round(f.RMSE, 2), "mejora_pct": round(f["Mejora_RMSE_vs_ingenuo_%"], 2),
-                      "parametros": int(f.n_params),
-                      "tiempo_s": None if pd.isna(f.get("tiempo_entrenamiento_s")) else round(f.tiempo_entrenamiento_s, 1)})
+    for k, s in spec["horizontes"].items():
+        m = s["modelo_app"]
+        final_plain = NAMES[m["celda"]] if m["peso"] == 1 else None
+        for _, f in comp[(comp.horizonte == k) & comp.modelo.isin(["Ingenuo", *NAMES.values()])].iterrows():
+            filas.append(fila(f, f.modelo, f.modelo == final_plain))
+        if final_plain is None:
+            f = comp[(comp.horizonte == k) & (comp.modelo == m["nombre"])].iloc[0]
+            filas.append(fila(f, f"{NAMES[m['celda']]}, peso {m['peso']:.1f}".replace(".", ","), True))
     dump("comparativa", {"fuente": f"test {TEST_START[:4]}-2026", "filas": filas})
 
     backtest = {"horizontes": {}}
@@ -105,6 +118,7 @@ def write_test_files(spec: dict) -> None:
         backtest["horizontes"][k] = {
             "modelo": display_name(s), "fechas": q.fecha_objetivo.tolist(), "real": q.precio_real.round(2).tolist(),
             "previsto": q.precio_pred.round(2).tolist(),
+            "ingenuo": q.precio_hoy.round(2).tolist(),  # "sin modelo": the price on the day the forecast was made
             "error_medio": round(float((q.precio_real - q.precio_pred).abs().mean()), 2),
             "error_medio_ingenuo": round(float((q.precio_real - q.precio_hoy).abs().mean()), 2),
             "acierto_direccion_pct": round(float(hit * 100), 1),
@@ -157,7 +171,8 @@ def write_data_files(spec: dict) -> None:
     dump("activos", {"fecha_dato": f"{todo.index[-1]:%Y-%m-%d}", "activos": activos})
 
     comparar = {}
-    for clave, col, _, corto, *_ in ACTIVOS[1:6]:
+    # WTI, gas, oro, cobre, dólar and EUR/USD (the Terminal's practice mode also uses EUR/USD to convert to euros)
+    for clave, col, _, corto, *_ in ACTIVOS[1:7]:
         s = todo[col].ffill().where(lambda x: x > 0)
         comparar[clave] = {"nombre": corto, "valores": [None if pd.isna(x) else round(float(x), 3) for x in s]}
     dump("comparar", comparar, compact=True)
@@ -201,10 +216,74 @@ def write_data_files(spec: dict) -> None:
     })
 
 
+def write_results_file(spec: dict) -> None:
+    """Training curves, validation by year, seeds and interval coverage of the final round, for the Resultados view.
+
+    Everything is read from the reports of the round; nothing is computed here beyond rounding.
+    """
+    out = results_dir(CURRENT_ROUND)
+    if not (out / "validacion_resumen.csv").exists():
+        print("Sin informes de entrenamiento en este entorno: se mantiene resultados.json.")
+        return
+    val = pd.read_csv(out / "validacion_resumen.csv")
+    years = [int(c[4:]) for c in val.columns if c.startswith("rel_")]
+    seeds = pd.read_csv(out / "metricas_por_semilla.csv")
+    inter = pd.read_csv(out / "intervalo_resumen.csv")
+    inter_dec = json.loads((out / "intervalo_decision.json").read_text())
+    ventana = json.loads((out / "ventana" / "decision.json").read_text())["horizontes"]
+    metodos = {"historico": "Histórico (precio de hoy)", "conformal": "Conformal",
+               "conformal_vol": "Conformal escalado por volatilidad"}
+    res = {"años": years, "nivel_intervalo": inter_dec["nivel"], "horizontes": {}}
+    for k, s in spec["horizontes"].items():
+        h, m = PLAZOS[k], s["modelo_app"]
+        chosen_plain = NAMES[m["celda"]] if m["peso"] == 1 else None
+
+        def fila(f, nombre: str, final: bool) -> dict:
+            return {"modelo": nombre, "final": final, "peso": round(float(f.peso), 2),
+                    "media": round(float(f.rmse_relativo), 4),
+                    "por_año": [None if pd.isna(f[f"rel_{y}"]) else round(float(f[f"rel_{y}"]), 4) for y in years]}
+
+        filas = [fila(f, f.modelo, f.modelo == chosen_plain)
+                 for _, f in val[(val.horizonte == k) & val.modelo.isin(list(NAMES.values()))].iterrows()]
+        if chosen_plain is None:
+            f = val[(val.horizonte == k) & (val.modelo == m["nombre"])].iloc[0]
+            filas.append(fila(f, f"{NAMES[m['celda']]}, peso {m['peso']:.1f}".replace(".", ","), True))
+
+        curvas = {}
+        for cell, name in NAMES.items():
+            info = json.loads((out / "curvas" / f"{cell}_h{h}.json").read_text())
+            c = pd.read_csv(out / "curvas" / f"{cell}_h{h}.csv")
+            curvas[cell] = {"red": name, "epocas": int(info["epocas"]), "mejor_epoca": int(info["mejor_epoca"]),
+                            "tiempo_s": round(float(info["tiempo_s"]), 1), "parametros": int(info["n_params"]),
+                            "aprende": info["periodo_aprende"], "valida": info["periodo_valida"],
+                            "paciencia": int(info["config"]["patience"]), "semilla": int(info["semilla"]),
+                            "entrenamiento": c.train_rel.round(4).tolist(), "validacion": c.val_rel.round(4).tolist()}
+
+        sem = {}
+        for name in NAMES.values():
+            q = seeds[(seeds.horizonte == k) & (seeds.modelo == name)].sort_values("semilla")
+            sem[name] = {"mejora_rmse_pct": q["Mejora_RMSE_vs_ingenuo_%"].round(2).tolist(),
+                         "epocas": q.best_epoch.astype(int).tolist(), "tiempo_s": q.train_time_s.round(1).tolist()}
+
+        d = inter_dec["horizontes"][k]
+        q = inter[inter.horizonte == k]
+        res["horizontes"][k] = {
+            "validacion": filas, "curvas": curvas, "semillas": sem,
+            "ventana": {"elegida": int(ventana[str(h)]["ventana"]),
+                        "puntuaciones": {str(w): round(float(v), 4) for w, v in ventana[str(h)]["puntuaciones"].items()}},
+            "intervalo": {"elegido": d["metodo"], "años": str(q["años"].iloc[0]),
+                          "metodos": [{"metodo": f.metodo, "nombre": metodos.get(f.metodo, f.metodo),
+                                       "cobertura_pct": round(float(f.cobertura) * 100, 1),
+                                       "anchura_pct": round(float(f.anchura_pct), 1)} for _, f in q.iterrows()]},
+        }
+    dump("resultados", res, compact=True)
+
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     spec = read_spec()
     write_test_files(spec)
+    write_results_file(spec)
     write_data_files(spec)
     print(f"Datos de la web escritos en {OUT}")
 

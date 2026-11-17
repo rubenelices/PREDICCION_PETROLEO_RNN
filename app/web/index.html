@@ -13,9 +13,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&family=Big+Shoulders+Display:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilos.css">
+<link rel="stylesheet" href="estilos.css?v=20261117l">
 </head>
 <body>
+  <canvas id="crudo-fondo" aria-hidden="true"></canvas>
   <div id="carga">Cargando datos…</div>
 
   <header class="nav" id="nav">
@@ -25,10 +26,8 @@
         <a href="#panel" aria-current="true">Panel</a>
         <a href="#escenarios">Escenarios</a>
         <a href="#mercado">Mercado</a>
-        <a href="#ciclos">Ciclos</a>
         <a href="#fiabilidad">Fiabilidad</a>
-        <a href="#modelo">Modelo</a>
-        <a href="#datos">Datos</a>
+        <a href="#resultados">Resultados</a>
         <a href="#terminal" class="enlace-terminal">Terminal</a>
       </nav>
       <div class="nav-dcha">
@@ -40,22 +39,39 @@
 
   <div class="cabecera">
     <canvas id="crudo" aria-hidden="true"></canvas>
-    <div class="envoltura cab-panel">
-      <div>
-        <h1>¿Cuánto costará el barril de Brent?</h1>
-        <p class="sub">Previsión a una semana, tres meses y un año hecha con redes neuronales recurrentes, con su margen de error y lo fiable que ha sido en el pasado.</p>
-        <span class="sello-datos" id="sello-datos"></span>
+    <!-- portada: la foto de la plataforma, el título y las dos puertas de la web -->
+    <div class="portada cab-panel">
+      <img class="portada-img" src="assets/portada.jpg?v=8" alt="" aria-hidden="true">
+      <div class="portada-fx" aria-hidden="true"><div class="llama" id="llama"></div></div>
+      <div class="envoltura portada-cuerpo">
+        <div class="portada-texto">
+          <p class="portada-ceja entra">Predicción con redes neuronales recurrentes <span>RNN · LSTM · GRU</span></p>
+          <h1 class="entra"><span>¿Cuánto costará</span> <span>el barril de <em>Brent</em>?</span></h1>
+          <p class="sub entra">El precio del crudo a una semana, tres meses y un año vista, con su margen de error y lo fiable que ha sido en el test.</p>
+          <div class="portada-botones entra">
+            <a class="boton boton-oro" href="historia.html">Ver la historia
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            <a class="boton boton-cristal" href="#terminal">Abrir la terminal</a>
+          </div>
+          <a class="portada-mini entra" id="portada-mini" href="#fiabilidad">
+            <span class="pm-cab"><b id="pm-titulo"></b><span><i class="real"></i>Precio real</span><span><i class="modelo"></i>Modelo</span></span>
+            <svg role="img" aria-labelledby="pm-titulo"></svg>
+          </a>
+          <div class="portada-cifras entra" id="portada-cifras" role="group" aria-label="Previsión por plazo"></div>
+        </div>
       </div>
-      <div class="hoy">
-        <div class="etq">Brent hoy, por barril</div>
-        <div class="num" id="hoy-precio"></div>
-        <div class="cambio" id="hoy-cambio"></div>
+      <div class="portada-cinta entra">
+        <div class="envoltura">
+          <span class="cinta-hoy" id="cinta-hoy"></span>
+          <a class="bajar" id="bajar" href="#panel">Ver la previsión
+            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2.5 5l4.5 4.5L11.5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          <a class="cinta-agitacion" id="agitacion" href="#mercado"></a>
+        </div>
       </div>
     </div>
     <div class="envoltura cab-seccion">
       <div>
         <h1 id="cab-titulo"></h1>
-        <p class="sub" id="cab-sub"></p>
       </div>
       <div class="hoy hoy-mini">
         <div class="etq">Brent hoy</div>
@@ -66,40 +82,33 @@
 
   <main class="envoltura">
     <div class="vista" data-vista="panel">
-    <div class="plazos" role="tablist" aria-label="Plazo de la previsión" id="plazos"></div>
 
     <section aria-labelledby="t-prevision">
       <div class="titulo-seccion">
-        <h2 id="t-prevision">Precio y previsión</h2>
-        <p>El plazo elegido arriba manda en todo el panel.</p>
+        <h2 id="t-prevision">La previsión de hoy</h2>
+        <p>Los tres plazos de un vistazo. Elige uno y el resto de la web cambia con él.</p>
       </div>
-      <div class="rejilla">
-        <div class="tarjeta s8">
-          <div class="cab-grafica">
-            <div>
-              <h3 id="g-titulo"></h3>
-              <p class="ayuda">Dólares por barril. La zona sombreada es donde caería el precio 8 de cada 10 veces.</p>
-            </div>
-            <div class="controles-g">
-              <button class="interruptor" type="button" id="redes" aria-pressed="false">Las tres redes</button>
-              <div class="segmentos" role="group" aria-label="Periodo del histórico" id="periodo">
-                <button type="button" data-anios="1" aria-pressed="true">1 año</button>
-                <button type="button" data-anios="5" aria-pressed="false">5 años</button>
-                <button type="button" data-anios="0" aria-pressed="false">Desde 2000</button>
-              </div>
-            </div>
-          </div>
-          <div class="grafica" id="g-principal"><svg role="img" aria-labelledby="g-titulo"></svg><div class="tooltip" hidden></div></div>
-          <div class="leyenda" aria-hidden="true">
-            <span><i class="l"></i>Precio real</span>
-            <span><i class="l disc"></i>Previsión</span>
-            <span><i class="b"></i>Rango probable</span>
-            <span><i class="l umbral"></i>Precio de referencia: arrástralo</span>
-            <span id="leyenda-redes" hidden><i class="l redes"></i>RNN simple y GRU</span>
-          </div>
-        </div>
-        <div class="tarjeta s4 lectura" id="lectura"></div>
+      <div class="resumen" id="resumen" role="group" aria-label="Previsión por plazo"></div>
+    </section>
+
+    <section class="oleoducto" aria-labelledby="t-oleo">
+      <div class="titulo-seccion">
+        <h2 id="t-oleo">Del dato a la previsión</h2>
+        <p>El recorrido del trabajo, etapa a etapa.</p>
       </div>
+      <div class="tubo-zona" id="tubo-zona">
+        <div class="tubo" aria-hidden="true"><i></i></div>
+        <ol class="etapas" id="etapas"></ol>
+      </div>
+    </section>
+
+    <section aria-labelledby="t-res">
+      <div class="titulo-seccion">
+        <h2 id="t-res">Resultados en el test</h2>
+        <p id="res-sub"></p>
+      </div>
+      <div class="res-filas" id="res-filas"></div>
+      <a class="enlace-mas" href="#resultados">Ver entrenamiento, validación y test</a>
     </section>
     </div>
 
@@ -116,15 +125,17 @@
         <h2>Cuatro señales</h2>
         <p id="mercado-sub"></p>
       </div>
+      <div class="mercado-lectura" id="mercado-lectura"></div>
       <div class="rejilla mercado-grid" id="indicadores"></div>
       <div class="titulo-seccion">
         <h2>Otros mercados</h2>
         <p>Cómo se han movido los activos que más influyen en el crudo.</p>
       </div>
       <div class="tarjeta"><div class="desplazable"><table class="tabla" id="tabla-mercado" style="margin-top:0"></table></div></div>
-    </section>
-
-    <section class="vista" data-vista="ciclos" id="ciclos" aria-label="Ciclos del mercado">
+      <div class="titulo-seccion" id="ciclos">
+        <h2>Ciclos del mercado</h2>
+        <p>Los grandes picos y caídas desde 2000 y qué los provocó. Pasa por una tarjeta para ver su tramo en la gráfica.</p>
+      </div>
       <div class="tarjeta">
         <div class="grafica" id="g-ciclos"><svg role="img" aria-label="Precio del Brent desde 2000 con sus grandes picos y caídas"></svg><div class="tooltip" hidden></div></div>
         <ol class="eventos" id="eventos"></ol>
@@ -136,7 +147,7 @@
       <div class="tarjeta"><div class="calor" id="calor" role="img" aria-label="Variación mensual del Brent desde 2000"></div></div>
     </section>
 
-    <section class="vista" data-vista="fiabilidad" id="fiabilidad" aria-label="¿Me puedo fiar?">
+    <section class="vista" data-vista="fiabilidad" id="fiabilidad" aria-label="Fiabilidad en el test">
       <div class="rejilla">
         <div class="tarjeta s8">
           <h3 id="b-titulo"></h3>
@@ -145,25 +156,71 @@
           <div class="leyenda" aria-hidden="true">
             <span><i class="l"></i>Precio real</span>
             <span><i class="l prev"></i>Lo que dijo el modelo</span>
+            <span><i class="l ingenuo"></i>Sin modelo (el precio de ese día)</span>
           </div>
-          <p class="subtitulo-g">Error de cada previsión: hacia arriba se pasó, hacia abajo se quedó corta</p>
+          <p class="subtitulo-g">Error de cada previsión del modelo</p>
           <div class="grafica" id="g-errores"><svg role="img" aria-label="Error de cada previsión en dólares"></svg></div>
+          <div class="leyenda" aria-hidden="true">
+            <span><i class="b err-sobre"></i>Se pasó</span>
+            <span><i class="b err-bajo"></i>Se quedó corta</span>
+          </div>
         </div>
         <div class="tarjeta s4" id="fiab-cifras"></div>
-      </div>
-    </section>
-
-    <section class="vista" data-vista="modelo" id="modelo" aria-label="Cómo funciona el modelo">
-      <div class="rejilla">
-        <ol class="tarjeta s12 pasos" id="pasos"></ol>
         <div class="tarjeta s12" id="comparacion"></div>
       </div>
-    </section>
-
-    <section class="vista" data-vista="datos" id="datos" aria-label="Datos y actualización">
+      <div class="titulo-seccion" id="modelo">
+        <h2>Cómo funciona el modelo</h2>
+        <p>Qué mira la red, cómo lo procesa y de dónde sale la previsión, sin tecnicismos.</p>
+      </div>
+      <ol class="tarjeta pasos" id="pasos"></ol>
+      <div class="titulo-seccion" id="datos">
+        <h2>Datos y actualización</h2>
+        <p>De dónde salen los datos, cuándo se descargaron y cómo traer los de hoy.</p>
+      </div>
       <div class="rejilla">
         <div class="tarjeta s6" id="estado-datos"></div>
         <div class="tarjeta s6" id="actualizar"></div>
+      </div>
+    </section>
+
+    <section class="vista resultados" data-vista="resultados" id="resultados" aria-label="Resultados">
+      <div class="lab-tuberia" id="lab-periodos"></div>
+
+      <div class="titulo-seccion lab-etapa">
+        <h2><small>01</small>Entrenamiento</h2>
+        <p>Cómo bajó el error de cada red época a época y en qué época se detuvo el entrenamiento (parada temprana) para evitar el sobreajuste.</p>
+      </div>
+      <div class="rejilla">
+        <div class="tarjeta s8">
+          <div class="cab-grafica">
+            <div><h3 id="lab-c-titulo"></h3>
+              <p class="ayuda">Error frente a no usar modelo: por debajo de 1, la red se equivoca menos que suponer que el precio no cambia.</p></div>
+            <div class="segmentos" id="lab-red" role="group" aria-label="Red"></div>
+          </div>
+          <div class="grafica" id="g-curvas"><svg role="img" aria-labelledby="lab-c-titulo"></svg><div class="tooltip" hidden></div></div>
+          <div class="leyenda" aria-hidden="true">
+            <span><i class="l curva-e"></i>Con los datos con los que aprende</span>
+            <span><i class="l prev"></i>Con datos de validación</span>
+            <span><i class="l mejor-e"></i>Mejor época: la que se guarda</span>
+          </div>
+        </div>
+        <div class="tarjeta s4" id="lab-fichas"></div>
+      </div>
+
+      <div class="titulo-seccion lab-etapa">
+        <h2><small>02</small>Validación</h2>
+        <p id="lab-v-sub"></p>
+      </div>
+      <div class="tarjeta" id="lab-validacion"></div>
+
+      <div class="titulo-seccion lab-etapa">
+        <h2><small>03</small>Test</h2>
+        <p id="lab-t-sub"></p>
+      </div>
+      <div class="rejilla">
+        <div class="tarjeta s12" id="lab-test"></div>
+        <div class="tarjeta s6" id="lab-semillas"></div>
+        <div class="tarjeta s6" id="lab-intervalo"></div>
       </div>
     </section>
 
@@ -185,44 +242,84 @@
               <button class="mini-boton" type="button" id="t-zoom-mas" aria-label="Acercar">+</button>
             </div>
           </div>
+          <div class="t-barra t-barra-herr">
+            <div class="herramientas" role="group" aria-label="Herramientas de análisis" id="t-herr"></div>
+            <button class="mini-boton" type="button" id="t-deshacer">Deshacer</button>
+            <button class="mini-boton" type="button" id="t-borrar">Borrar marcas</button>
+            <span class="herr-ayuda" id="t-herr-ayuda" aria-live="polite"></span>
+          </div>
+          <div class="aviso-juego" id="t-aviso-juego" hidden></div>
           <div class="lectura-g" id="t-lectura" aria-live="off"></div>
           <div class="grafica" id="t-g"><svg role="img"></svg></div>
           <div class="leyenda" aria-hidden="true" id="t-leyenda"></div>
-          <p class="atajos">Arrastra para moverte, <kbd>Ctrl</kbd> + rueda para acercar, doble clic para volver. Teclas: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> plazo, <kbd>M</kbd> medias, <kbd>R</kbd> redes, <kbd>V</kbd> velas, <kbd>L</kbd> logarítmica, <kbd>+</kbd> <kbd>−</kbd> zoom, <kbd>0</kbd> volver.</p>
+          <ul class="marcas" id="t-marcas" aria-label="Tus marcas en la gráfica"></ul>
+          <p class="atajos">Arrastra para moverte, <kbd>Ctrl</kbd> + rueda para acercar, doble clic para volver. Teclas: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> plazo, <kbd>M</kbd> medias, <kbd>R</kbd> redes, <kbd>V</kbd> velas, <kbd>L</kbd> logarítmica, <kbd>+</kbd> <kbd>−</kbd> zoom, <kbd>0</kbd> volver, <kbd>Esc</kbd> cancela un trazo.</p>
         </div>
         <div class="t-lado">
           <div class="tarjeta" id="t-libro"></div>
           <div class="tarjeta" id="t-ref"></div>
           <div class="tarjeta" id="t-senales"></div>
         </div>
+        <div class="tarjeta t-ancho practica" id="t-practica">
+          <div class="cab-grafica">
+            <div>
+              <h3>Practica con dinero ficticio</h3>
+              <p class="ayuda">Prueba qué habría pasado con tu dinero. Son datos reales del pasado, sin comisiones de bróker ni impuestos: sirve para entender el riesgo, no es una recomendación de inversión.</p>
+            </div>
+            <div class="segmentos" role="tablist" aria-label="Modo" id="t-modo">
+              <button type="button" role="tab" data-modo="calc" aria-selected="true">Si hubiera invertido</button>
+              <button type="button" role="tab" data-modo="juego" aria-selected="false">Modo práctica</button>
+            </div>
+          </div>
+          <div id="t-calc"></div>
+          <div id="t-juego" hidden></div>
+        </div>
         <div class="tarjeta t-ancho"><h3>Mercados relacionados</h3><div class="desplazable"><table class="tabla" id="t-tabla"></table></div></div>
       </div>
     </section>
 
-    <section class="historia vista" data-vista="panel" aria-labelledby="t-historia">
-      <div class="texto">
-        <h2 id="t-historia">Por qué el Brent se mueve así</h2>
-        <p>Baja por un pozo de petróleo y recorre 26 años de precio: las crisis, los picos y lo que aprendió el modelo de cada uno.</p>
-        <a class="boton boton-claro" href="historia.html">Ver la historia en 3D</a>
-      </div>
-      <svg class="balancin" viewBox="0 0 360 200" aria-hidden="true">
-        <g fill="#0d0b09">
-          <rect x="10" y="188" width="340" height="12"/>
-          <path d="M156 188 L178 66 L186 66 L208 188 L198 188 L182 86 L166 188 Z"/>
-          <rect x="62" y="160" width="58" height="28"/>
-          <circle cx="92" cy="150" r="20"/>
-          <rect x="84" y="112" width="6" height="40" transform="rotate(14 87 132)"/>
-          <g class="viga">
-            <rect x="74" y="62" width="196" height="12" rx="2"/>
-            <rect x="72" y="56" width="18" height="24" rx="2"/>
-            <path d="M262 50 q38 4 44 36 l-8 28 q-4 -32 -42 -36 z"/>
-          </g>
-          <rect x="300" y="112" width="3" height="76"/>
-          <rect x="290" y="176" width="22" height="12"/>
-        </g>
-      </svg>
-    </section>
   </main>
+
+  <section class="historia vista" data-vista="panel" aria-labelledby="t-historia">
+    <div class="envoltura"><div class="texto">
+      <h2 id="t-historia">Por qué el Brent se mueve así</h2>
+      <p>Baja por un pozo de petróleo y recorre 26 años de precio: las crisis, los picos y lo que aprendió el modelo de cada uno.</p>
+      <a class="boton boton-claro" href="historia.html">Ver la historia en 3D</a>
+    </div></div>
+    <svg class="balancin" viewBox="0 0 360 200" aria-hidden="true">
+      <g fill="#0d0b09">
+        <rect x="10" y="188" width="340" height="12"/>
+        <path d="M156 188 L178 66 L186 66 L208 188 L198 188 L182 86 L166 188 Z"/>
+        <rect x="62" y="160" width="58" height="28"/>
+        <circle cx="92" cy="150" r="20"/>
+        <rect x="84" y="112" width="6" height="40" transform="rotate(14 87 132)"/>
+        <g class="viga">
+          <rect x="74" y="62" width="196" height="12" rx="2"/>
+          <rect x="72" y="56" width="18" height="24" rx="2"/>
+          <path d="M262 50 q38 4 44 36 l-8 28 q-4 -32 -42 -36 z"/>
+        </g>
+        <rect x="300" y="112" width="3" height="76"/>
+        <rect x="290" y="176" width="22" height="12"/>
+      </g>
+    </svg>
+  </section>
+
+  <section class="puerta-terminal vista" data-vista="panel" aria-labelledby="t-puerta">
+    <div class="envoltura">
+      <div class="texto">
+        <p class="pt-ceja"><i aria-hidden="true"></i>Para el día a día</p>
+        <h2 id="t-puerta">La terminal de mercado</h2>
+        <p>Para quien sigue el crudo a diario: gráfica avanzada con velas y medias, comparación con otros activos, herramientas de dibujo y un simulador para operar con dinero ficticio.</p>
+        <a class="boton boton-oro" href="#terminal">Abrir la terminal
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      </div>
+      <a class="pt-ventana" href="#terminal" aria-label="Abrir la terminal" id="pt-ventana">
+        <span class="pt-barra" aria-hidden="true"><i></i><i></i><i></i><b>BRENT · 1 AÑO · VELAS SEMANALES</b><em id="pt-precio"></em></span>
+        <svg viewBox="0 0 560 250" aria-hidden="true" id="pt-svg"></svg>
+        <span class="pt-pie" aria-hidden="true"><span>Velas</span><span>Medias</span><span>Comparar</span><span>Simulador</span><code>&gt; abrir<u>_</u></code></span>
+      </a>
+    </div>
+  </section>
 
   <footer>
     <div class="envoltura">
@@ -231,7 +328,7 @@
     </div>
   </footer>
 
-  <script type="module" src="crudo.js"></script>
-  <script type="module" src="panel.js"></script>
+  <script type="module" src="crudo.js?v=20261116h"></script>
+  <script type="module" src="panel.js?v=20261117j"></script>
 </body>
 </html>

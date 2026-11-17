@@ -312,10 +312,10 @@ La aplicación está en [`app/`](app/): un servidor **FastAPI** que sirve una we
 
 **Qué ofrece:**
 - **Panel:** previsión a 1 semana, 3 meses y 1 año con su intervalo del 80 % y un **indicador de fiabilidad** por plazo (*aporta valor*, *orientativa* o *poco fiable*), calculado a partir de los resultados del test.
-- **Escenarios:** probabilidad de que el precio supere un umbral, con la distribución del intervalo.
-- **Fiabilidad:** lo que predijo el modelo en el test frente a lo que pasó.
-- **Modelo:** comparación de las tres redes en cada plazo.
-- **Datos:** dos botones que llaman al backend: **actualizar datos** (descarga lo último de FRED y Yahoo y recalcula la previsión con los modelos guardados) y **reentrenar** (vuelve a entrenar las redes con todos los datos, en segundo plano).
+- **Escenarios:** simulador de sucesos (recorte de la OPEP+, recesión, cierre de Ormuz), coste de una compra de crudo en euros y probabilidad de que el precio supere un umbral, con la distribución del intervalo.
+- **Mercado:** señales del mercado (volatilidad, VIX, euro/dólar, diferencial Brent-WTI), otros activos y los ciclos del precio desde 2000.
+- **Fiabilidad:** lo que predijo el modelo en el test frente al precio real y frente al modelo ingenuo, la comparación de las tres redes en cada plazo con el modelo final marcado, cómo funciona el modelo y dos botones que llaman al backend: **actualizar datos** (descarga lo último de FRED y Yahoo y recalcula la previsión con los modelos guardados) y **reentrenar** (vuelve a entrenar las redes con todos los datos, en segundo plano).
+- **Terminal:** vista avanzada con capas (medias móviles, las tres redes, velas, escala logarítmica), comparación con otros activos, herramientas para marcar puntos, trazar líneas y medir la variación entre dos días, una calculadora de inversión en euros (con comisión y apalancamiento) y un modo práctica que oculta el futuro para operar día a día y compararse con comprar y mantener o con seguir al modelo.
 - **Historia:** un recorrido en 3D por los grandes picos y valles del Brent desde 2000.
 
 ```mermaid

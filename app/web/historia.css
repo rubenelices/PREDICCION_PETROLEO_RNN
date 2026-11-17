@@ -3,7 +3,7 @@
   --hueso-2: rgba(251, 239, 220, .74);
   --hueso-3: rgba(251, 239, 220, .5);
   --fondo: #0d0806;
-  --panel: rgba(16, 10, 7, .74);
+  --panel: rgba(16, 10, 7, .84);
   --borde: rgba(251, 239, 220, .13);
   --ambar: #f3b441;
   --pos: #6fb3a8;
@@ -120,6 +120,8 @@ tbody th { color: var(--hueso); }
 .barra-div span { position: absolute; top: 0; height: 100%; border-radius: 4px; }
 .barra-div .pos { background: var(--pos); } .barra-div .neg { background: var(--neg); }
 .valor { font-size: .85rem; color: var(--hueso); }
+.comparativa td.elegida, .comparativa th.elegida { background: rgba(243, 180, 65, .1); }
+.comparativa td.elegida strong { display: block; font-size: .85rem; color: var(--ambar); }
 details { margin-bottom: .8rem; } summary { cursor: pointer; color: var(--hueso); font-weight: 700; font-size: .95rem; }
 .tecnica { font-size: .8rem; }
 

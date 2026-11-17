@@ -16,8 +16,8 @@
    "modelo": "LSTM",
    "red": "LSTM",
    "intervalo": "Conformal escalado por volatilidad",
-   "mejora_vs_ingenuo_pct": 0.14,
-   "mejora_mae_vs_ingenuo_pct": 0.05,
+   "mejora_vs_ingenuo_pct": 0.1,
+   "mejora_mae_vs_ingenuo_pct": 0.1,
    "direccion_pct": 51.9
   },
   "medio": {
@@ -32,8 +32,8 @@
    "modelo": "RNN simple ajustada",
    "red": "RNN simple",
    "intervalo": "Histórico (precio de hoy)",
-   "mejora_vs_ingenuo_pct": -9.45,
-   "mejora_mae_vs_ingenuo_pct": -11.11,
+   "mejora_vs_ingenuo_pct": -9.4,
+   "mejora_mae_vs_ingenuo_pct": -11.1,
    "direccion_pct": 54.9
   },
   "largo": {
@@ -48,8 +48,8 @@
    "modelo": "LSTM",
    "red": "LSTM",
    "intervalo": "Histórico (precio de hoy)",
-   "mejora_vs_ingenuo_pct": 6.71,
-   "mejora_mae_vs_ingenuo_pct": -0.71,
+   "mejora_vs_ingenuo_pct": 6.7,
+   "mejora_mae_vs_ingenuo_pct": -0.7,
    "direccion_pct": 51.3
   }
  },
