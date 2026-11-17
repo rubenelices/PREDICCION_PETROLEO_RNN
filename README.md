@@ -26,13 +26,13 @@ Error en el **test (enero de 2024 → noviembre de 2026)**, medido como RMSE en 
 | 3 meses | 1,110 | **0,972** | 1,020 | 1,069 | RNN simple (peso 0,9) → 1,094 | 80 % |
 | 1 año | 0,955 | **0,933** | 0,938 | 0,948 | LSTM → **0,933** (RMSE +6,7 %) | 87 % |
 
-En dólares por barril, el modelo final de cada plazo frente al ingenuo:
+El modelo final de cada plazo frente al ingenuo, con las cuatro métricas: errores en dólares por barril y R² del cambio de precio, que es lo que predicen las redes (el ingenuo predice cambio cero):
 
-| Plazo | Modelo final | RMSE: ingenuo → final | MAE: ingenuo → final |
-|---|---|---|---|
-| 1 semana | LSTM | 5,82 → 5,81 $ | 3,85 → 3,85 $ |
-| 3 meses | RNN simple (peso 0,9) | 20,06 → 21,96 $ | 12,83 → 14,26 $ |
-| 1 año | LSTM | 25,80 → **24,07 $** | 19,76 → 19,90 $ |
+| Plazo | Modelo final | RMSE: ingenuo → final | MAE: ingenuo → final | MSE ($²): ingenuo → final | R² del cambio: ingenuo → final |
+|---|---|---|---|---|---|
+| 1 semana | LSTM | 5,82 → 5,81 $ | 3,85 → 3,85 $ | 33,9 → 33,8 | −0,002 → 0,002 |
+| 3 meses | RNN simple (peso 0,9) | 20,06 → 21,96 $ | 12,83 → 14,26 $ | 402,4 → 482,1 | −0,015 → −0,243 |
+| 1 año | LSTM | 25,80 → **24,07 $** | 19,76 → 19,90 $ | 665,6 → **579,3** | −0,031 → **0,121** |
 
 - **1 semana:** ninguna red se separa del ingenuo. A este plazo el precio de mañana es casi el de hoy, y lo útil es el intervalo, que acierta el 79 % de las veces y se mantiene estable año a año.
 - **3 meses:** la LSTM mejora al ingenuo un 2,8 %, pero la red elegida en validación (RNN simple) no se sostiene en el test y es muy inestable entre semillas.
@@ -263,6 +263,20 @@ Cada red se entrena con todos los datos anteriores a 2024 (con embargo) y 5 semi
 
 El [notebook 07](notebooks/07_comparativa_modelos.ipynb) completa la tabla con la mejora del MAE, el acierto de dirección, el p-valor de Diebold-Mariano (con corrección para predicciones solapadas) y un intervalo de confianza del 95 % de la mejora por *bootstrap* por bloques. Lo único claro del test es negativo: la RNN simple a 3 meses es peor que el ingenuo en todo su intervalo (de −19,6 % a −4,8 %). La LSTM a 3 meses va de −4,8 % a +4,8 %. A 1 año caben solo dos bloques de un año en el test, así que ese intervalo es orientativo.
 
+### R²: cuánto explica cada modelo
+
+El R² compara el error con el de predecir la media del periodo de test (1 es perfecto, 0 es igual que la media, negativo es peor). Esa media no se conoce de antemano, así que el R² solo tiene sentido al lado del ingenuo. Se da sobre el precio y sobre el cambio de precio a *h* días:
+
+| Plazo | R² del precio: ingenuo / final | R² del cambio: ingenuo / final | R² del cambio: RNN simple / LSTM / GRU |
+|---|---|---|---|
+| 1 semana | 0,873 / 0,873 | −0,002 / 0,002 | 0,009 / 0,002 / 0,010 |
+| 3 meses | −0,396 / −0,672 | −0,015 / −0,243 | −0,287 / **0,052** / −0,028 |
+| 1 año | −0,706 / −0,485 | −0,031 / **0,121** | 0,070 / **0,121** / 0,107 |
+
+- **El R² del precio engaña a 1 semana:** 0,873 parece un modelo excelente, pero el ingenuo saca lo mismo. Solo dice que el precio de dentro de una semana se parece al de hoy.
+- **El R² del cambio de precio** da la misma lectura que el RMSE y el MAE: ninguna red explica el movimiento a 1 semana, el modelo final es peor que el ingenuo a 3 meses (solo la LSTM queda en positivo) y a 1 año la LSTM explica el 12 % de la variación del cambio de precio y la GRU el 10,7 %.
+- A 3 meses y a 1 año el R² del precio es negativo incluso para el ingenuo: el precio se movió en un rango estrecho en 2024-2025 y después llegó el shock de 2026, así que los errores a esos plazos son grandes frente a la variación total del periodo.
+
 <p align="center"><img src="docs/img/test_comparativa.png" width="100%" alt="Error por barril de cada red frente al ingenuo en el test"></p>
 
 ### El modelo final frente a la realidad
@@ -284,6 +298,7 @@ El [notebook 07](notebooks/07_comparativa_modelos.ipynb) completa la tabla con l
 3. **A 1 año la LSTM baja el RMSE un 6,7 %**, con las 5 semillas a favor, y es el único horizonte en el que el modelo final gana en validación y en el test. Pero no mejora el error medio (MAE −0,7 %), y la ventaja se acumula en 2026, con el shock de Ormuz. La GRU es más regular: baja el RMSE un 6,2 % y el MAE un 11,8 %, y gana en 2025 y en 2026.
 4. **Entre arquitecturas, la LSTM es la más consistente**: es la única que mejora al ingenuo a 3 meses y a 1 año, en validación y en el test. La RNN simple es la más barata de entrenar, pero la más inestable. La GRU queda en medio.
 5. **Una regresión lineal (Ridge) queda cerca** a 1 año (+5,2 %): con unos 6.000 días de datos y un problema tan ruidoso, la ventaja de las redes recurrentes es pequeña.
+6. **Las cuatro métricas cuentan lo mismo.** RMSE, MAE, MSE y R² del cambio de precio coinciden: empate a 1 semana, peor a 3 meses y algo de señal a 1 año (R² de 0,12). El R² del precio, en cambio, sale alto a 1 semana para cualquier modelo y no sirve para compararlos.
 
 **Limitaciones:**
 - Ninguna red mejora al ingenuo de forma significativa: el test tiene casi tres años (menos de dos de objetivos a 1 año), y a 1 año las predicciones se solapan casi por completo.
@@ -398,7 +413,7 @@ Los tests comprueban, entre otras cosas, que no haya fugas de información del f
 │   ├── sequences.py          Ventanas de entrada
 │   ├── models.py             RNN simple, LSTM y GRU
 │   ├── training.py           Entrenamiento con parada temprana
-│   ├── metrics.py            MAE, RMSE, dirección, Diebold-Mariano y bootstrap
+│   ├── metrics.py            MAE, MSE, RMSE, R², dirección, Diebold-Mariano y bootstrap
 │   ├── intervals.py          Intervalos del 80 %
 │   ├── app_model.py          Modelos de la aplicación
 │   ├── experiment_log.py     Tablas y figuras de las rondas (nb 08)

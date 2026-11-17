@@ -15,7 +15,7 @@ from oil_forecast.config import CURRENT_ROUND, HORIZONS, results_dir
 from oil_forecast.data import load_dataset
 from oil_forecast.experiment_log import H_LABELS, METHOD_NAMES, NETS
 from oil_forecast.intervals import volatility
-from oil_forecast.metrics import bootstrap_block, bootstrap_skill
+from oil_forecast.metrics import bootstrap_block, bootstrap_skill, r2
 from oil_forecast.plotting import COLORS, INK, INK_2
 
 BASELINES = ["Ingenuo", "Media histórica", "Ridge"]
@@ -68,7 +68,35 @@ def dollar_table(r: dict) -> pd.DataFrame:
             "Plazo": H_LABELS[hname], "Modelo final": final_name(f),
             "RMSE ingenuo": naive.RMSE, "RMSE final": final.RMSE,
             "MAE ingenuo": naive.MAE, "MAE final": final.MAE,
+            "MSE ingenuo": naive.MSE, "MSE final": final.MSE,
             **{f"RMSE {net}": comp.loc[(hname, net), "RMSE"] for net in NETS},
+        })
+    return pd.DataFrame(rows).set_index("Plazo")
+
+
+def r2_scores(r: dict, hname: str, model: str) -> tuple[float, float]:
+    """R² of a model in the test, on the price and on the log return at h days (what the networks predict)."""
+    q = r["preds"][(r["preds"].horizonte == hname) & (r["preds"].modelo == model)]
+    change = np.log(q.precio_real / q.precio_hoy)
+    return r2(q.precio_real, q.precio_pred), r2(change, q.retorno_pred)
+
+
+def r2_table(r: dict) -> pd.DataFrame:
+    """R² of the naive forecast, the final model and the three networks, per horizon.
+
+    On the price, R² mostly measures that tomorrow's price is close to today's,
+    so it is only meaningful next to the naive model's. On the change in price,
+    the naive forecast explains nothing by construction, and a positive value is
+    information the network adds.
+    """
+    rows = []
+    for hname, f in r["final"].items():
+        (p_naive, c_naive), (p_final, c_final) = r2_scores(r, hname, "Ingenuo"), r2_scores(r, hname, f["modelo"])
+        rows.append({
+            "Plazo": H_LABELS[hname], "Modelo final": final_name(f),
+            "R² precio ingenuo": p_naive, "R² precio final": p_final,
+            "R² cambio ingenuo": c_naive, "R² cambio final": c_final,
+            **{f"R² cambio {net}": r2_scores(r, hname, net)[1] for net in NETS},
         })
     return pd.DataFrame(rows).set_index("Plazo")
 

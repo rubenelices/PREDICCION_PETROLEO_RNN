@@ -1,6 +1,6 @@
 import numpy as np
 
-from oil_forecast.metrics import bootstrap_block, bootstrap_skill, skill
+from oil_forecast.metrics import bootstrap_block, bootstrap_skill, r2, skill
 
 
 def _series(n=600, seed=0):
@@ -31,3 +31,10 @@ def test_bootstrap_is_reproducible_and_blocks_cover_the_horizon():
     assert bootstrap_skill(y, pred, naive, block=10, seed=3) == bootstrap_skill(y, pred, naive, block=10, seed=3)
     assert bootstrap_block(252, 468) == 252
     assert bootstrap_block(5, 715) == 9
+
+
+def test_r2_reference_values():
+    y = np.array([1.0, 2.0, 3.0, 4.0])
+    assert r2(y, y) == 1.0
+    assert r2(y, np.full(4, y.mean())) == 0.0  # predicting the mean explains nothing
+    assert r2(y, y[::-1]) < 0  # worse than the mean

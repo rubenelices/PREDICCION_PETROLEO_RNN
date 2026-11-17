@@ -16,6 +16,18 @@ def rmse(y_true, y_pred) -> float:
     return float(np.sqrt(mse(y_true, y_pred)))
 
 
+def r2(y_true, y_pred) -> float:
+    """Coefficient of determination: 1 - SSE / SST, with the mean of ``y_true`` as reference.
+
+    Negative when the forecast is worse than that mean. The mean of the test
+    period is not known in advance, so a negative R² is not by itself a failure:
+    it must be read next to the naive model's R² on the same data.
+    """
+    y_true, y_pred = np.asarray(y_true, dtype=float), np.asarray(y_pred, dtype=float)
+    sst = np.sum((y_true - y_true.mean()) ** 2)
+    return float(1 - np.sum((y_true - y_pred) ** 2) / sst)
+
+
 def mape(y_true, y_pred) -> float:
     y_true, y_pred = np.asarray(y_true), np.asarray(y_pred)
     return float(np.mean(np.abs((y_true - y_pred) / y_true)) * 100)
