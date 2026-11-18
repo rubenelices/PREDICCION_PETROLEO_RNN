@@ -1,0 +1,47 @@
+# Daily update of the web data, without retraining (scripts/actualizar_datos.py).
+# Downloads the data up to today, recalculates the forecast with the saved models, writes it in the
+# follow-up log and, if anything changed, commits it to main. Vercel publishes the web again on
+# every push. After the last day of the follow-up (END in the script) it does nothing.
+name: Actualizar datos
+
+on:
+  schedule:
+    - cron: "0 22 * * *"   # 22:00 UTC, after the European and New York closes
+  workflow_dispatch:       # also by hand: Actions → Actualizar datos → Run workflow
+
+permissions:
+  contents: write
+
+concurrency:
+  group: actualizar-datos
+  cancel-in-progress: false
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: src
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: app/requirements.txt
+      - run: pip install -r app/requirements.txt
+      - run: python scripts/actualizar_datos.py
+      - name: Commit si hay datos nuevos
+        run: |
+          # only when there is a new price (estado.json also stores the download time, which always changes)
+          FECHA=$(python -c "import json; print(json.load(open('app/web/datos/estado.json'))['hasta'])")
+          ANTES=$(git show HEAD:app/web/datos/estado.json | python -c "import json, sys; print(json.load(sys.stdin)['hasta'])")
+          git add app/web/datos reports/seguimiento
+          if [ "$FECHA" = "$ANTES" ] && git diff --cached --quiet -- reports/seguimiento; then
+            echo "Sin datos nuevos (último precio del $FECHA)"; exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Datos de la web hasta el $FECHA"
+          git pull --rebase
+          git push

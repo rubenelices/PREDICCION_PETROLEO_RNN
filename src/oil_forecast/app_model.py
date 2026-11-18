@@ -12,7 +12,7 @@ adjustment weight and the 80 % interval chosen before the test.
 
 import json
 import time
-from datetime import datetime
+from datetime import UTC, datetime
 
 import numpy as np
 import pandas as pd
@@ -132,3 +132,87 @@ def forecast(data: ModelData | None = None, model_dir=APP_MODELS_DIR) -> dict:
             "redes": {c: float(price * np.exp(r)) for c, r in nets.items()},
         }
     return out
+
+
+def track(since: str | None = None, data: ModelData | None = None, model_dir=APP_MODELS_DIR) -> pd.DataFrame:
+    """Forecasts of the saved app models from each day after their training data, against the real price.
+
+    The models are not retrained: each new day only passes through them, as in
+    the app's "update data" button. ``since`` defaults to the last day the
+    models were trained with. One row per origin and horizon; the real price,
+    the errors and whether it fell in the 80 % interval are empty until the
+    target date is in the data.
+    """
+    data = data or load_model_data()
+    rows = [{**r, **_outcome(data, r)} for r in _forecasts_since(data, since, model_dir)]
+    return pd.DataFrame(rows)
+
+
+# ---------------------------------------------------------------------------
+# Follow-up log: the forecast of each day, written down the day it is made
+# ---------------------------------------------------------------------------
+FOLLOW_LOG = ROOT / "reports" / "seguimiento" / "previsiones.csv"
+
+
+def _forecasts_since(data: ModelData, since: str | None, model_dir, skip: set | None = None) -> list[dict]:
+    """Forecast of every day of ``data`` from ``since`` (default: the last training day), without retraining."""
+    meta = json.loads((model_dir / "modelos.json").read_text())
+    since = pd.Timestamp(since or meta["ultimo_dato"])
+    rows = []
+    for k in np.flatnonzero(data.index >= since):
+        if skip and data.index[k] in skip:
+            continue
+        sub = ModelData(data.feats.iloc[: k + 1], data.targets.iloc[: k + 1], data.price[: k + 1])
+        f = forecast(sub, model_dir)
+        for hname, h in f["horizontes"].items():
+            rows.append({"origen": data.index[k], "horizonte": hname, "h": h["h"], "precio_hoy": f["precio_hoy"],
+                         "prevision": h["precio"], "ic80_inferior": h["rango80"][0], "ic80_superior": h["rango80"][1]})
+    return rows
+
+
+def _outcome(data: ModelData, r: dict) -> dict:
+    """Target date, real price and errors of one forecast, once its target date is in ``data``."""
+    k = data.index.searchsorted(r["origen"])
+    t = k + r["h"]
+    known = k < len(data.index) and data.index[k] == r["origen"] and t < len(data.index)
+    real = float(data.price[t]) if known else np.nan
+    return {
+        "fecha_objetivo": data.index[t] if known else r["origen"] + pd.offsets.BDay(r["h"]),
+        "objetivo_conocido": known, "precio_real": real,
+        "error_modelo": abs(real - r["prevision"]) if known else np.nan,
+        "error_ingenuo": abs(real - r["precio_hoy"]) if known else np.nan,
+        "dentro_ic80": bool(r["ic80_inferior"] <= real <= r["ic80_superior"]) if known else None,
+    }
+
+
+def log_forecasts(data: ModelData | None = None, path=FOLLOW_LOG, model_dir=APP_MODELS_DIR) -> int:
+    """Append to the follow-up log the forecasts of the days of ``data`` that are not in it yet.
+
+    Each row keeps the date it was written (``registrada``, UTC), so that a
+    forecast can later be told apart from one computed after its target was
+    known. Rows already in the log are never rewritten, even if the data are
+    revised afterwards. Returns the number of days added.
+    """
+    data = data or load_model_data()
+    old = pd.read_csv(path, parse_dates=["origen"]) if path.exists() else None
+    done = set(old.origen) if old is not None else set()
+    rows = _forecasts_since(data, None, model_dir, skip=done)
+    if not rows:
+        return 0
+    new = pd.DataFrame(rows).assign(registrada=datetime.now(UTC).strftime("%Y-%m-%d"))
+    out = new if old is None else pd.concat([old, new], ignore_index=True)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    out.assign(origen=out.origen.dt.strftime("%Y-%m-%d")).to_csv(path, index=False, float_format="%.4f")
+    return new.origen.nunique()
+
+
+def read_log(data: ModelData | None = None, path=FOLLOW_LOG) -> pd.DataFrame:
+    """The follow-up log against the real price, with the same columns as :func:`track`.
+
+    ``a_ciegas`` is true when the forecast was written before its target date,
+    i.e. without knowing the price it predicts.
+    """
+    data = data or load_model_data()
+    log = pd.read_csv(path, parse_dates=["origen", "registrada"])
+    out = pd.DataFrame([{**r, **_outcome(data, r)} for r in log.to_dict("records")])
+    return out.assign(a_ciegas=out.registrada < out.fecha_objetivo)

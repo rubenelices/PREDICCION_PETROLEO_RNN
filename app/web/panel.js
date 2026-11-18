@@ -1191,6 +1191,31 @@ function pintarDatos() {
       <button class="boton boton-borde" type="button" id="csv-prevision">Descargar la previsión (CSV)</button>
       <button class="boton boton-borde" type="button" id="csv-historico">Descargar el histórico (CSV)</button>
     </div>`;
+  // web publicada (estática): los datos se actualizan solos cada día con GitHub Actions
+  $('actualizar').innerHTML = `
+    <h3>Cómo se actualiza</h3>
+    <div class="accion">
+      <div class="fila"><strong>Cada día, sin reentrenar</strong></div>
+      <p>Todos los días a las 22:00 (hora UTC) se descargan los precios más recientes y los datos nuevos pasan por las redes ya entrenadas: la previsión cambia, los pesos no. La última actualización trajo precios hasta el ${fechaLarga(e.hasta)}.</p>
+    </div>
+    <div class="accion">
+      <div class="fila"><strong>Cada previsión queda apuntada</strong></div>
+      <p>La previsión de cada día se guarda el mismo día en el repositorio, antes de conocer el precio que predice, y se compara con el real cuando llega su fecha.</p>
+    </div>`;
+  // con el servidor de Python (en local) se puede actualizar o reentrenar desde aquí
+  fetch('api/estado').then(r => (r.ok ? r.json() : null)).then(s => { if (s && 'tarea' in s) botonesServidor(); }).catch(() => {});
+  $('csv-prevision').addEventListener('click', () => {
+    const p = D.prediccion;
+    const filas = [['plazo', 'fecha_objetivo', 'precio_previsto_usd', 'rango_bajo_usd', 'rango_alto_usd', 'variacion_pct', 'fiabilidad']];
+    for (const [k, h] of Object.entries(p.horizontes)) filas.push([PLAZOS[k].nombre, h.fecha_objetivo, h.precio, h.rango80[0], h.rango80[1], h.variacion_pct, nivel(h).etiqueta]);
+    descargar(`prevision_brent_${p.fecha_dato}.csv`, filas);
+  });
+  $('csv-historico').addEventListener('click', () => {
+    const h = D.historico;
+    descargar(`brent_historico_${D.estado.hasta}.csv`, [['fecha', 'brent_usd'], ...h.fechas.map((f, i) => [f, h.precios[i]])]);
+  });
+}
+function botonesServidor() {
   $('actualizar').innerHTML = `
     <h3>Traer los datos de hoy</h3>
     <div class="accion">
@@ -1202,16 +1227,6 @@ function pintarDatos() {
       <p>Vuelve a entrenar la red con todos los datos disponibles. Tarda varios minutos; mientras tanto el panel sigue mostrando la previsión anterior.</p>
     </div>
     <p class="aviso" id="aviso-datos" role="status"></p>`;
-  $('csv-prevision').addEventListener('click', () => {
-    const p = D.prediccion;
-    const filas = [['plazo', 'fecha_objetivo', 'precio_previsto_usd', 'rango_bajo_usd', 'rango_alto_usd', 'variacion_pct', 'fiabilidad']];
-    for (const [k, h] of Object.entries(p.horizontes)) filas.push([PLAZOS[k].nombre, h.fecha_objetivo, h.precio, h.rango80[0], h.rango80[1], h.variacion_pct, nivel(h).etiqueta]);
-    descargar(`prevision_brent_${p.fecha_dato}.csv`, filas);
-  });
-  $('csv-historico').addEventListener('click', () => {
-    const h = D.historico;
-    descargar(`brent_historico_${D.estado.hasta}.csv`, [['fecha', 'brent_usd'], ...h.fechas.map((f, i) => [f, h.precios[i]])]);
-  });
   $('actualizar').querySelectorAll('[data-accion]').forEach(b => b.addEventListener('click', () => accion(b)));
 }
 function descargar(nombre, filas) {
@@ -1231,7 +1246,7 @@ async function accion(boton) {
     const res = await r.json();
     aviso.textContent = res.mensaje ?? 'Hecho. Recarga la página para ver las cifras nuevas.';
   } catch {
-    aviso.textContent = 'Esta copia de la web no tiene el servidor de Python encendido, así que solo muestra los datos guardados. En la versión publicada este botón descarga los datos nuevos y recalcula la previsión.';
+    aviso.textContent = 'No se ha podido contactar con el servidor de Python. Comprueba que sigue encendido y vuelve a intentarlo.';
   } finally {
     boton.disabled = false;
     boton.textContent = texto;
