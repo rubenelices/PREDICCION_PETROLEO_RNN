@@ -3,7 +3,8 @@
 <p align="center"><b>Tres redes recurrentes para prever el barril a 1 semana, 3 meses y 1 año, con su intervalo del 80 % y una web que lo explica.</b></p>
 
 <p align="center">
-  <a href="URL_DEL_SPACE"><img src="https://img.shields.io/badge/Abrir%20la%20aplicaci%C3%B3n-E8A33D?style=for-the-badge&logo=huggingface&logoColor=1a1a1a" alt="Abrir la aplicación"></a>
+  <a href="https://prediccionpetroleornn-web.vercel.app/"><img src="https://img.shields.io/badge/Abrir%20la%20aplicaci%C3%B3n-E8A33D?style=for-the-badge&logo=vercel&logoColor=1a1a1a" alt="Abrir la aplicación"></a>
+  <a href="https://huggingface.co/RubenElices/PREDICCION_PETROLEO_RNN"><img src="https://img.shields.io/badge/Modelo-FFD21E?style=for-the-badge&logo=huggingface&logoColor=1a1a1a" alt="Modelo en Hugging Face"></a>
   <a href="docs/metodologia.md"><img src="https://img.shields.io/badge/C%C3%B3mo%20se%20hizo-2B5A7A?style=for-the-badge&logo=jupyter&logoColor=white" alt="Cómo se hizo"></a>
   <a href="docs/resultados.md"><img src="https://img.shields.io/badge/Resultados-3E7A4A?style=for-the-badge&logo=pytorch&logoColor=white" alt="Resultados"></a>
   <a href="docs/aplicacion.md"><img src="https://img.shields.io/badge/Gu%C3%ADa%20de%20la%20web-8A4B2E?style=for-the-badge&logo=fastapi&logoColor=white" alt="Guía de la web"></a>
@@ -15,8 +16,9 @@
   <img src="https://img.shields.io/badge/PyTorch-2.x-EE4C2C?logo=pytorch&logoColor=white" alt="PyTorch">
   <img src="https://img.shields.io/badge/Optuna-búsqueda%20de%20hiperparámetros-2C5BB4" alt="Optuna">
   <img src="https://img.shields.io/badge/FastAPI-aplicación%20web-009688?logo=fastapi&logoColor=white" alt="FastAPI">
-  <img src="https://img.shields.io/badge/Docker-Hugging%20Face%20Spaces-2496ED?logo=docker&logoColor=white" alt="Docker">
-  <img src="https://img.shields.io/badge/tests-27%20pasan-brightgreen" alt="Tests">
+  <img src="https://img.shields.io/badge/Vercel-web%20publicada-000000?logo=vercel&logoColor=white" alt="Vercel">
+  <img src="https://img.shields.io/badge/GitHub%20Actions-datos%20cada%20d%C3%ADa-2088FF?logo=githubactions&logoColor=white" alt="GitHub Actions">
+  <img src="https://img.shields.io/badge/tests-31%20pasan-brightgreen" alt="Tests">
 </p>
 
 <p align="center">
@@ -57,6 +59,17 @@ Las cuatro métricas, el R², la comparación año a año y las conclusiones est
 | [`06_ajuste_hiperparametros`](notebooks/06_ajuste_hiperparametros.ipynb) | Cómo funciona cada celda, la elección de la ventana común, la búsqueda y las arquitecturas finales |
 | [`07_comparativa_modelos`](notebooks/07_comparativa_modelos.ipynb) | Test: tabla comparativa, estabilidad entre semillas, predicciones, intervalo, coste y conclusiones |
 | [`08_registro_experimentos`](notebooks/08_registro_experimentos.ipynb) | Todas las rondas de experimentos: qué se probó, qué salió y qué se decidió, con curvas de aprendizaje |
+| [`09_seguimiento`](notebooks/09_seguimiento.ipynb) | Los modelos de la aplicación con datos posteriores a su entrenamiento, sin reentrenar: previsión frente a precio real |
+
+## Datos al día
+
+La web está publicada en **[prediccionpetroleornn-web.vercel.app](https://prediccionpetroleornn-web.vercel.app/)** y se actualiza sola, sin reentrenar:
+
+- **Cada día a las 22:00 UTC** (hasta el 30 de noviembre de 2026), un workflow de GitHub Actions ([`actualizar_datos.yml`](.github/workflows/actualizar_datos.yml)) descarga los datos de FRED y Yahoo Finance hasta ese día y los pasa por los modelos ya entrenados. La previsión cambia; los pesos no.
+- **La previsión de cada día queda apuntada** en [`reports/seguimiento/previsiones.csv`](reports/seguimiento/previsiones.csv) con la fecha en que se hizo, antes de conocer el precio que predice. El notebook [`09_seguimiento`](notebooks/09_seguimiento.ipynb) la compara con el precio real cuando llega su fecha.
+- **Si hay un precio nuevo, el workflow hace commit** y Vercel vuelve a publicar la web.
+
+Los pesos de las redes (45 modelos: 3 plazos × 3 redes × 5 semillas) están también en **[Hugging Face](https://huggingface.co/RubenElices/PREDICCION_PETROLEO_RNN)**, con su ficha.
 
 ## Ponerlo en marcha
 
@@ -78,5 +91,5 @@ Eso abre la aplicación en <http://localhost:7860> con los modelos ya entrenados
 |---|---|
 | [Cómo se hizo](docs/metodologia.md) | El problema, los datos, la validación sin mirar al futuro, las rondas de experimentos, la validación hacia atrás y el intervalo del 80 % |
 | [Resultados](docs/resultados.md) | Tabla comparativa del test, R², el modelo final frente a la realidad, conclusiones y limitaciones |
-| [Guía de la web](docs/aplicacion.md) | Qué ofrece cada página de la web, cómo está montada y cómo desplegarla en Hugging Face Spaces |
+| [Guía de la web](docs/aplicacion.md) | Qué ofrece cada página de la web, cómo está montada, cómo se publica en Vercel y cómo se actualiza cada día |
 | [Reproducirlo](docs/reproducir.md) | Los diez pasos del trabajo, tests y estructura del repositorio |
