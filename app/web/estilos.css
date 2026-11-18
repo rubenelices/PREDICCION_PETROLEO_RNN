@@ -207,6 +207,20 @@ html.en-portada .plazo-nav { display: none; }
 .tramo-evento { fill: rgba(242, 234, 221, .07); opacity: 0; transition: opacity .2s ease; }
 .tramo-evento.activa { opacity: 1; }
 .nota-tabla { font-size: .84rem; color: var(--texto-3); margin-top: 10px; }
+/* seguimiento: previsiones a 1 semana desde el fin del entrenamiento */
+.seg-cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 14px 0 18px; }
+.seg-cifras .num { font-size: 1.6rem; }
+.seg-fin { stroke: var(--texto-3); stroke-dasharray: 4 4; }
+.seg-fin-txt { fill: var(--texto-3); font-size: 11px; }
+.seg-prev line { stroke: var(--ambar); stroke-opacity: .45; stroke-width: 6; stroke-linecap: round; }
+.seg-prev circle { fill: var(--ambar); stroke: var(--capa); stroke-width: 2; }
+.seg-prev.pend line { stroke-opacity: .18; }
+.seg-prev.pend circle { fill: var(--capa); stroke: var(--ambar); stroke-width: 1.5; }
+.leyenda .b.seg-p { background: var(--ambar); }
+.leyenda .b.seg-pend { background: transparent; border: 1.5px solid var(--ambar); }
+.tabla-seguimiento tr.pendiente td, .tabla-seguimiento tr.pendiente th { color: var(--texto-3); }
+.tabla-seguimiento .gana { color: #6fb3a8; font-weight: 700; }
+.tabla-seguimiento sup { color: var(--ambar); margin-left: 2px; }
 html:not([data-vista="panel"]) main > .vista:first-of-type, main > .vista { padding-top: 0; }
 html:not([data-vista="panel"]) main { padding-top: 6px; }
 .plazo-nav { flex: none; }

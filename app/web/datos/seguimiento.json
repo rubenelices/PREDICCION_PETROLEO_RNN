@@ -1,0 +1,566 @@
+{
+ "entrenado_hasta": "2026-11-03",
+ "filas": [
+  {
+   "origen": "2026-11-03",
+   "objetivo": "2026-11-10",
+   "horizonte": "corto",
+   "precio_hoy": 107.03,
+   "prevision": 106.25,
+   "rango80": [
+    94.15,
+    118.7
+   ],
+   "real": 90.16,
+   "error_modelo": 16.09,
+   "error_ingenuo": 16.87,
+   "dentro": false,
+   "a_ciegas": false,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-03",
+   "objetivo": "2027-01-29",
+   "horizonte": "medio",
+   "precio_hoy": 107.03,
+   "prevision": 103.96,
+   "rango80": [
+    86.64,
+    135.06
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-03",
+   "objetivo": "2027-10-21",
+   "horizonte": "largo",
+   "precio_hoy": 107.03,
+   "prevision": 105.0,
+   "rango80": [
+    63.93,
+    177.06
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-04",
+   "objetivo": "2026-11-11",
+   "horizonte": "corto",
+   "precio_hoy": 91.84,
+   "prevision": 91.15,
+   "rango80": [
+    77.84,
+    105.31
+   ],
+   "real": 92.14,
+   "error_modelo": 0.99,
+   "error_ingenuo": 0.3,
+   "dentro": true,
+   "a_ciegas": false,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-04",
+   "objetivo": "2027-02-01",
+   "horizonte": "medio",
+   "precio_hoy": 91.84,
+   "prevision": 88.81,
+   "rango80": [
+    74.35,
+    115.89
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-04",
+   "objetivo": "2027-10-22",
+   "horizonte": "largo",
+   "precio_hoy": 91.84,
+   "prevision": 91.41,
+   "rango80": [
+    54.86,
+    151.93
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-05",
+   "objetivo": "2026-11-12",
+   "horizonte": "corto",
+   "precio_hoy": 97.96,
+   "prevision": 97.24,
+   "rango80": [
+    82.3,
+    113.29
+   ],
+   "real": 95.42,
+   "error_modelo": 1.82,
+   "error_ingenuo": 2.54,
+   "dentro": true,
+   "a_ciegas": false,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-05",
+   "objetivo": "2027-02-02",
+   "horizonte": "medio",
+   "precio_hoy": 97.96,
+   "prevision": 96.87,
+   "rango80": [
+    79.3,
+    123.62
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-05",
+   "objetivo": "2027-10-25",
+   "horizonte": "largo",
+   "precio_hoy": 97.96,
+   "prevision": 98.81,
+   "rango80": [
+    58.51,
+    162.06
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-06",
+   "objetivo": "2026-11-13",
+   "horizonte": "corto",
+   "precio_hoy": 97.83,
+   "prevision": 97.1,
+   "rango80": [
+    82.42,
+    112.81
+   ],
+   "real": 95.17,
+   "error_modelo": 1.93,
+   "error_ingenuo": 2.66,
+   "dentro": true,
+   "a_ciegas": false,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-06",
+   "objetivo": "2027-02-03",
+   "horizonte": "medio",
+   "precio_hoy": 97.83,
+   "prevision": 95.5,
+   "rango80": [
+    79.2,
+    123.45
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-06",
+   "objetivo": "2027-10-26",
+   "horizonte": "largo",
+   "precio_hoy": 97.83,
+   "prevision": 99.53,
+   "rango80": [
+    58.43,
+    161.84
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-09",
+   "objetivo": "2026-11-16",
+   "horizonte": "corto",
+   "precio_hoy": 91.03,
+   "prevision": 90.37,
+   "rango80": [
+    76.35,
+    105.44
+   ],
+   "real": 92.9,
+   "error_modelo": 2.53,
+   "error_ingenuo": 1.87,
+   "dentro": true,
+   "a_ciegas": false,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-09",
+   "objetivo": "2027-02-04",
+   "horizonte": "medio",
+   "precio_hoy": 91.03,
+   "prevision": 90.96,
+   "rango80": [
+    73.69,
+    114.87
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-09",
+   "objetivo": "2027-10-27",
+   "horizonte": "largo",
+   "precio_hoy": 91.03,
+   "prevision": 94.04,
+   "rango80": [
+    54.37,
+    150.59
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-10",
+   "objetivo": "2026-11-17",
+   "horizonte": "corto",
+   "precio_hoy": 90.16,
+   "prevision": 89.49,
+   "rango80": [
+    75.63,
+    104.38
+   ],
+   "real": 92.94,
+   "error_modelo": 3.45,
+   "error_ingenuo": 2.78,
+   "dentro": true,
+   "a_ciegas": false,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-10",
+   "objetivo": "2027-02-05",
+   "horizonte": "medio",
+   "precio_hoy": 90.16,
+   "prevision": 90.65,
+   "rango80": [
+    72.99,
+    113.77
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-10",
+   "objetivo": "2027-10-28",
+   "horizonte": "largo",
+   "precio_hoy": 90.16,
+   "prevision": 94.25,
+   "rango80": [
+    53.85,
+    149.15
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-11",
+   "objetivo": "2026-11-18",
+   "horizonte": "corto",
+   "precio_hoy": 92.14,
+   "prevision": 91.43,
+   "rango80": [
+    77.14,
+    106.82
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": false,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-11",
+   "objetivo": "2027-02-08",
+   "horizonte": "medio",
+   "precio_hoy": 92.14,
+   "prevision": 91.92,
+   "rango80": [
+    74.59,
+    116.27
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-11",
+   "objetivo": "2027-10-29",
+   "horizonte": "largo",
+   "precio_hoy": 92.14,
+   "prevision": 97.34,
+   "rango80": [
+    55.03,
+    152.43
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-12",
+   "objetivo": "2026-11-19",
+   "horizonte": "corto",
+   "precio_hoy": 95.42,
+   "prevision": 94.68,
+   "rango80": [
+    79.64,
+    110.92
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-12",
+   "objetivo": "2027-02-09",
+   "horizonte": "medio",
+   "precio_hoy": 95.42,
+   "prevision": 94.92,
+   "rango80": [
+    77.25,
+    120.41
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-12",
+   "objetivo": "2027-11-01",
+   "horizonte": "largo",
+   "precio_hoy": 95.42,
+   "prevision": 101.42,
+   "rango80": [
+    56.99,
+    157.85
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-13",
+   "objetivo": "2026-11-20",
+   "horizonte": "corto",
+   "precio_hoy": 95.17,
+   "prevision": 94.39,
+   "rango80": [
+    79.4,
+    110.58
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-13",
+   "objetivo": "2027-02-10",
+   "horizonte": "medio",
+   "precio_hoy": 95.17,
+   "prevision": 93.71,
+   "rango80": [
+    77.04,
+    120.1
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-13",
+   "objetivo": "2027-11-02",
+   "horizonte": "largo",
+   "precio_hoy": 95.17,
+   "prevision": 101.64,
+   "rango80": [
+    56.84,
+    157.44
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-16",
+   "objetivo": "2026-11-23",
+   "horizonte": "corto",
+   "precio_hoy": 92.9,
+   "prevision": 92.1,
+   "rango80": [
+    77.69,
+    107.63
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-16",
+   "objetivo": "2027-02-11",
+   "horizonte": "medio",
+   "precio_hoy": 92.9,
+   "prevision": 91.78,
+   "rango80": [
+    75.21,
+    117.23
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-16",
+   "objetivo": "2027-11-03",
+   "horizonte": "largo",
+   "precio_hoy": 92.9,
+   "prevision": 99.76,
+   "rango80": [
+    55.49,
+    153.68
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-17",
+   "objetivo": "2026-11-24",
+   "horizonte": "corto",
+   "precio_hoy": 92.94,
+   "prevision": 92.12,
+   "rango80": [
+    77.69,
+    107.66
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-17",
+   "objetivo": "2027-02-12",
+   "horizonte": "medio",
+   "precio_hoy": 92.94,
+   "prevision": 91.79,
+   "rango80": [
+    75.24,
+    117.28
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  },
+  {
+   "origen": "2026-11-17",
+   "objetivo": "2027-11-04",
+   "horizonte": "largo",
+   "precio_hoy": 92.94,
+   "prevision": 100.28,
+   "rango80": [
+    55.51,
+    153.75
+   ],
+   "real": null,
+   "error_modelo": null,
+   "error_ingenuo": null,
+   "dentro": null,
+   "a_ciegas": true,
+   "registrada": "2026-11-18"
+  }
+ ]
+}

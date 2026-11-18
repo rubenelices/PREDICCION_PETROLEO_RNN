@@ -60,6 +60,7 @@ async function cargar() {
   const res = await Promise.all(nombres.map(n => fetch(`datos/${n}.json`).then(r => r.json())));
   D = Object.fromEntries(nombres.map((n, i) => [n, res[i]]));
   D.activos = await fetch('datos/activos.json').then(r => (r.ok ? r.json() : null)).catch(() => null);
+  D.seguimiento = await fetch('datos/seguimiento.json').then(r => (r.ok ? r.json() : null)).catch(() => null);
   D.historico.t = D.historico.fechas.map(f => aFecha(f).getTime());
   D.usdPorEur = D.mercado.indicadores.find(i => i.nombre.startsWith('Euro')).hoy;
   D.eventos.forEach(e => { e.t = aFecha(e.date).getTime(); e.corto = NOMBRE_CORTO[e.date] ?? e.title; });
@@ -849,6 +850,89 @@ function pintarFiabilidad() {
         <div class="dif">Tirando una moneda sería un 50 %</div></div>
     </div>
     ${porAnios(b)}`;
+}
+// ---------------------------------------------------------------------------
+// Seguimiento: la previsión a 1 semana de cada día desde el fin del entrenamiento,
+// apuntada ese día (reports/seguimiento/previsiones.csv) y comparada con el precio real
+// ---------------------------------------------------------------------------
+function pintarSeguimiento() {
+  const S = D.seguimiento;
+  if (!S) { $('seguimiento').hidden = true; return; }
+  const F = S.filas.filter(f => f.horizonte === 'corto');
+  const ok = F.filter(f => f.real != null);
+  const media = k => ok.reduce((s, f) => s + f[k], 0) / ok.length;
+  const gana = ok.filter(f => f.error_modelo < f.error_ingenuo).length;
+  const dentro = ok.filter(f => f.dentro).length;
+  const tarde = F.filter(f => !f.a_ciegas);
+  const corta = s => new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short' }).format(aFecha(s)).replace('.', '');
+  const primera = h => S.filas.filter(f => f.horizonte === h).map(f => f.objetivo).sort()[0];
+  const err = (f, k, otro) => (f.real == null ? '—' : `<span class="${f[k] < f[otro] ? 'gana' : ''}">${dolares(f[k])}</span>`);
+  $('seguimiento').innerHTML = `
+    <h3>Con datos nuevos, sin reentrenar</h3>
+    <p class="ayuda">Las redes aprendieron con datos hasta el ${fechaLarga(S.entrenado_hasta)}. Desde entonces, cada día se apunta la previsión a 1 semana con los pesos ya fijados y, cuando llega su fecha, se compara con el precio real y con no usar modelo (el precio del día en que se hizo).</p>
+    <div class="seg-cifras">
+      <div class="cifra"><div class="etq">Comprobadas</div><div class="num">${ok.length}</div><div class="dif">de ${F.length} apuntadas; el resto aún no ha llegado a su fecha</div></div>
+      <div class="cifra"><div class="etq">Error medio</div><div class="num">${ok.length ? dolares(media('error_modelo')) : '—'}</div><div class="dif">Sin modelo: ${ok.length ? dolares(media('error_ingenuo')) : '—'}</div></div>
+      <div class="cifra"><div class="etq">Gana a no usar modelo</div><div class="num">${gana} de ${ok.length}</div><div class="dif">Previsiones con menos error que el precio del día</div></div>
+      <div class="cifra"><div class="etq">Dentro del intervalo</div><div class="num">${dentro} de ${ok.length}</div><div class="dif">Está pensado para acertar 8 de cada 10 veces</div></div>
+    </div>
+    <div class="grafica" id="g-seguimiento"><svg role="img" aria-label="Previsiones a 1 semana desde el fin del entrenamiento frente al precio real"></svg><div class="tooltip" hidden></div></div>
+    <div class="leyenda" aria-hidden="true">
+      <span><i class="l"></i>Precio real</span>
+      <span><i class="b seg-p"></i>Previsión a 1 semana, en la fecha que predice, con su intervalo del 80 %</span>
+      <span><i class="b seg-pend"></i>Pendiente</span>
+    </div>
+    <div class="desplazable">
+      <table class="tabla tabla-seguimiento">
+        <thead><tr><th>Hecha el</th><th>Precio ese día</th><th>Para el</th><th>Previsión de la red</th><th>Intervalo 80 %</th><th>Precio real</th><th>Error de la red</th><th>Error sin modelo</th><th>¿Dentro?</th></tr></thead>
+        <tbody>${[...F].reverse().map(f => `<tr class="${f.real == null ? 'pendiente' : ''}">
+          <th scope="row">${corta(f.origen)}${f.a_ciegas ? '' : '<sup>*</sup>'}</th><td>${dolares(f.precio_hoy)}</td><td>${corta(f.objetivo)}</td>
+          <td>${dolares(f.prevision)}</td><td>${f0.format(f.rango80[0])}–${f0.format(f.rango80[1])} $</td>
+          <td>${f.real == null ? 'pendiente' : dolares(f.real)}</td>
+          <td>${err(f, 'error_modelo', 'error_ingenuo')}</td><td>${err(f, 'error_ingenuo', 'error_modelo')}</td>
+          <td>${f.real == null ? '—' : f.dentro ? 'sí' : 'no'}</td></tr>`).join('')}</tbody>
+      </table>
+    </div>
+    <p class="nota-tabla">En verde, el que menos se equivocó en cada previsión.${tarde.length ? ` * Las previsiones hechas del ${corta(tarde[0].origen)} al ${corta(tarde.at(-1).origen)} se apuntaron el ${corta(tarde[0].registrada)}, al poner en marcha el registro, cuando su precio ya se conocía: se calcularon con los mismos pesos y solo con los datos hasta su fecha, pero no a ciegas. Las demás se apuntaron antes de conocer el precio que predicen.` : ''} Con tan pocas previsiones, y casi solapadas, esto es una comprobación en directo, no una evaluación: la evaluación son los casi tres años de test de arriba. Las previsiones a 3 meses y a 1 año también se apuntan; las primeras vencen el ${fechaLarga(primera('medio'))} y el ${fechaLarga(primera('largo'))}.</p>`;
+}
+function graficaSeguimiento() {
+  const cont = $('g-seguimiento');
+  if (!cont?.clientWidth || !D.seguimiento) return;
+  const F = D.seguimiento.filas.filter(f => f.horizonte === 'corto');
+  const svg = cont.querySelector('svg'), tip = cont.querySelector('.tooltip');
+  const W = cont.clientWidth, H = W < 560 ? 220 : 260, m = { t: 16, r: 16, b: 26, l: 40 };
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('height', H);
+  svg.replaceChildren();
+  const t0 = aFecha(D.seguimiento.entrenado_hasta).getTime() - 14 * 864e5;
+  const t1 = Math.max(aFecha(F.at(-1).objetivo).getTime(), D.historico.t.at(-1)) + 864e5;
+  const idx = D.historico.t.map((t, i) => [t, i]).filter(([t]) => t >= t0);
+  const real = idx.map(([t, i]) => [t, D.historico.precios[i]]);
+  const vals = [...real.map(r => r[1]), ...F.flatMap(f => f.rango80)];
+  const yM = marcas(Math.min(...vals), Math.max(...vals), 4);
+  const x = escala(t0, t1, m.l, W - m.r), y = escala(yM.ini, yM.fin, H - m.b, m.t);
+  const semanas = [];
+  for (let t = aFecha(D.seguimiento.entrenado_hasta).getTime(); t <= t1; t += 7 * 864e5) semanas.push([t, new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short' }).format(t).replace('.', '')]);
+  ejes(svg, { W, H, m, y, yMarcas: yM.lista, x, xMarcas: semanas });
+  const xe = x(aFecha(D.seguimiento.entrenado_hasta).getTime());
+  el('line', { class: 'seg-fin', x1: xe, x2: xe, y1: m.t, y2: H - m.b }, svg);
+  el('text', { class: 'seg-fin-txt', x: xe - 6, y: m.t + 10, 'text-anchor': 'end' }, svg).textContent = 'fin del entrenamiento';
+  el('path', { class: 'linea-real', d: camino(real.map(([t, v]) => [x(t), y(v)])) }, svg);
+  const T = F.map(f => aFecha(f.objetivo).getTime());
+  F.forEach((f, i) => {
+    const g = el('g', { class: `seg-prev${f.real == null ? ' pend' : ''}` }, svg);
+    el('line', { x1: x(T[i]), x2: x(T[i]), y1: y(f.rango80[0]), y2: y(f.rango80[1]) }, g);
+    el('circle', { cx: x(T[i]), cy: y(f.prevision), r: 4 }, g);
+  });
+  const zona = el('rect', { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: 'transparent' }, svg);
+  const mover = ev => {
+    const r = svg.getBoundingClientRect(), px = ev.clientX - r.left;
+    const i = busqueda(T, t0 + ((px - m.l) / (W - m.r - m.l)) * (t1 - t0)), f = F[i];
+    tooltipEn(tip, cont, x(T[i]), y(f.rango80[1]),
+      `Hecha el ${fechaLarga(f.origen)} para el ${fechaLarga(f.objetivo)}<strong>La red dijo ${dolares(f.prevision)}</strong>Intervalo: ${f0.format(f.rango80[0])}–${f0.format(f.rango80[1])} $<br>${f.real == null ? 'Precio real: aún no se conoce' : `Precio real ${dolares(f.real)}: error ${dolares(f.error_modelo)}, sin modelo ${dolares(f.error_ingenuo)}`}`);
+  };
+  zona.addEventListener('pointermove', mover);
+  zona.addEventListener('pointerdown', mover);
+  zona.addEventListener('pointerleave', ev => { if (ev.pointerType !== 'touch') tip.hidden = true; });
 }
 // error medio de cada año de las pruebas, del modelo y de no usar modelo
 function porAnios(b) {
@@ -2034,7 +2118,7 @@ const VISTAS = {
   terminal: { titulo: 'Terminal', sub: 'Todo a mano para quien sigue el mercado a diario: gráfica avanzada, capas, comparación con otros activos y atajos de teclado.' },
 };
 function repintar() {
-  graficaBacktest(); graficaErrores(); graficaCiclos(); graficaCurvas(); graficaMiniPortada();
+  graficaBacktest(); graficaErrores(); graficaSeguimiento(); graficaCiclos(); graficaCurvas(); graficaMiniPortada();
   pintarUmbral(false); pintarSimulador(); dibujarMinis();
 }
 // La web es un solo recorrido: Panel, Escenarios, Mercado, Fiabilidad y Resultados van uno debajo de
@@ -2196,6 +2280,7 @@ pintarPlazos();
 pintarOleoducto();
 pintarResultados();
 pintarResumenTest();
+pintarSeguimiento();
 // «Ver el detalle» baja al primer bloque sin cambiar de vista
 $('resumen').addEventListener('click', ev => { const b = ev.target.closest('[data-plazo]'); if (b) elegir(b.dataset.plazo); });
 montarCoste();

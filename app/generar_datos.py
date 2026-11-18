@@ -19,7 +19,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from oil_forecast.app_model import APP_MODELS_DIR, forecast, read_spec
+from oil_forecast.app_model import (
+    APP_MODELS_DIR,
+    FOLLOW_LOG,
+    forecast,
+    read_log,
+    read_spec,
+)
 from oil_forecast.config import (
     CURRENT_ROUND,
     DATASET_PATH,
@@ -216,6 +222,22 @@ def write_data_files(spec: dict) -> None:
     })
 
 
+def write_follow_file() -> None:
+    """Follow-up log against the real price (app_model.read_log), for the Fiabilidad view."""
+    if not FOLLOW_LOG.exists():
+        return
+    r = read_log()
+    num = lambda v: None if pd.isna(v) else round(float(v), 2)
+    filas = [{
+        "origen": f"{x.origen:%Y-%m-%d}", "objetivo": f"{x.fecha_objetivo:%Y-%m-%d}", "horizonte": x.horizonte,
+        "precio_hoy": num(x.precio_hoy), "prevision": num(x.prevision), "rango80": [num(x.ic80_inferior), num(x.ic80_superior)],
+        "real": num(x.precio_real), "error_modelo": num(x.error_modelo), "error_ingenuo": num(x.error_ingenuo),
+        "dentro": x.dentro_ic80, "a_ciegas": bool(x.a_ciegas), "registrada": f"{x.registrada:%Y-%m-%d}",
+    } for x in r.itertuples()]
+    modelos = json.loads((APP_MODELS_DIR / "modelos.json").read_text())
+    dump("seguimiento", {"entrenado_hasta": modelos["ultimo_dato"], "filas": filas})
+
+
 def write_results_file(spec: dict) -> None:
     """Training curves, validation by year, seeds and interval coverage of the final round, for the Resultados view.
 
@@ -285,6 +307,7 @@ def main() -> None:
     write_test_files(spec)
     write_results_file(spec)
     write_data_files(spec)
+    write_follow_file()
     print(f"Datos de la web escritos en {OUT}")
 
 
