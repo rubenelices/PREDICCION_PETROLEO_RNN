@@ -1437,11 +1437,11 @@ function pintarTablaTerminal() {
   const A = D.activos, tabla = $('t-tabla');
   if (!A) { tabla.closest('.tarjeta').hidden = true; return; }
   const celda = v => `<td class="${clase(v)}">${pct(v, 1)}</td>`;
-  tabla.innerHTML = `<thead><tr><th>Activo</th><th>Último</th><th>1 día</th><th>1 mes</th><th>3 meses</th><th>Percentil</th><th class="col-mini">Último año</th></tr></thead>
+  tabla.innerHTML = `<thead><tr><th>Activo</th><th>Último</th><th>1 día</th><th>1 mes</th><th>3 meses</th><th class="col-pct">Frente a su historia desde 2000</th><th class="col-mini">Último año</th></tr></thead>
     <tbody>${A.activos.map(a => {
       const x = escala(0, a.serie.length - 1, 2, 116), y = escala(Math.min(...a.serie), Math.max(...a.serie), 25, 3);
       return `<tr><th scope="row">${a.nombre}</th><td>${nf(a.decimales).format(a.hoy)}${a.unidad ? ` ${a.unidad}` : ''}</td>${celda(a.d1_pct)}${celda(a.m1_pct)}${celda(a.m3_pct)}
-        <td>p${f0.format(a.percentil * 100)}</td>
+        <td class="col-pct"><div class="percentil" role="img" aria-label="Más alto que el ${f0.format(a.percentil * 100)} % de los días"><b style="left:${(a.percentil * 100).toFixed(1)}%"></b></div><span class="mini-etq">Más alto que el ${f0.format(a.percentil * 100)} % de los días</span></td>
         <td class="col-mini"><svg class="chispa" width="120" height="28" viewBox="0 0 120 28" aria-hidden="true"><path d="${camino(a.serie.map((v, i) => [x(i), y(v)]))}"/></svg></td></tr>`;
     }).join('')}</tbody>`;
 }
@@ -2112,19 +2112,18 @@ function dibujarOperaciones(g) {
 const VISTAS = {
   panel: null,
   escenarios: { titulo: 'Escenarios', sub: 'Añade un suceso a la previsión, calcula lo que te costaría y mira la probabilidad de que el barril cruce un precio.' },
-  mercado: { titulo: 'Cómo está el mercado', sub: 'Cómo llega hoy el mercado: señales de tensión, otros activos y los ciclos del crudo desde 2000.' },
   fiabilidad: { titulo: 'Fiabilidad en el test', sub: 'Lo que dijo el modelo en el test (2024-2026) frente a lo que pasó de verdad.' },
   resultados: { titulo: 'Resultados del trabajo', sub: 'Entrenamiento, validación y test de las tres redes, con las cifras tal como salieron.' },
-  terminal: { titulo: 'Terminal', sub: 'Todo a mano para quien sigue el mercado a diario: gráfica avanzada, capas, comparación con otros activos y atajos de teclado.' },
+  terminal: { titulo: 'Terminal', sub: 'Todo a mano para quien sigue el mercado a diario: gráfica avanzada, capas, comparación con otros activos, señales del mercado y los ciclos del crudo desde 2000.' },
 };
 function repintar() {
   graficaBacktest(); graficaErrores(); graficaSeguimiento(); graficaCiclos(); graficaCurvas(); graficaMiniPortada();
   pintarUmbral(false); pintarSimulador(); dibujarMinis();
 }
-// La web es un solo recorrido: Panel, Escenarios, Mercado, Fiabilidad y Resultados van uno debajo de
-// otro y el menú baja hasta cada uno. La terminal se abre aparte, con su botón.
-const RECORRIDO = ['panel', 'escenarios', 'mercado', 'fiabilidad', 'resultados'];
-const APARTADOS = { ciclos: 'mercado', modelo: 'fiabilidad', datos: 'fiabilidad' };
+// La web es un solo recorrido: Panel, Escenarios, Fiabilidad y Resultados van uno debajo de otro y el
+// menú baja hasta cada uno. La terminal se abre aparte, con su botón, y lleva también lo del mercado.
+const RECORRIDO = ['panel', 'escenarios', 'fiabilidad', 'resultados'];
+const APARTADOS = { mercado: 'terminal', ciclos: 'terminal', modelo: 'fiabilidad', datos: 'fiabilidad' };
 let saltoActual = 0;
 function marcarSeccion(v) {
   document.documentElement.classList.toggle('en-portada', v === 'panel');
@@ -2150,7 +2149,14 @@ function mostrar(v, suave = false) {
   if (terminal) $('cab-titulo').textContent = VISTAS.terminal.titulo;
   marcarSeccion(v);
   if (cambiaModo) repintar();
-  if (terminal) { scrollTo({ top: 0, behavior: 'instant' }); prepararTerminal().then(pintarTerminal); return; }
+  if (terminal) {
+    scrollTo({ top: 0, behavior: 'instant' });
+    prepararTerminal().then(() => {
+      pintarTerminal();
+      if (apartado) requestAnimationFrame(() => $(apartado).scrollIntoView({ behavior: reduceMotion ? 'instant' : 'smooth', block: 'start' }));
+    });
+    return;
+  }
   // se baja hasta el título de la sección (o hasta el apartado, si la dirección lo nombra)
   const destino = apartado ? $(apartado) : v === 'panel' ? null : ($(v).querySelector('.vista-cab') ?? $(v));
   const comportamiento = suave && !cambiaModo && !reduceMotion ? 'smooth' : 'instant';
@@ -2199,21 +2205,6 @@ function navegacion() {
   document.documentElement.style.setProperty('--alto-nav', `${nav.offsetHeight}px`);
 }
 
-// ---------------------------------------------------------------------------
-// Mercado: tabla compacta de activos
-// ---------------------------------------------------------------------------
-function pintarTablaMercado() {
-  const A = D.activos, tabla = $('tabla-mercado');
-  if (!A) { tabla.closest('.tarjeta').hidden = true; tabla.closest('.tarjeta').previousElementSibling.hidden = true; return; }
-  const celda = v => `<td>${pct(v, 1)}</td>`;
-  tabla.innerHTML = `<thead><tr><th>Activo</th><th>Último</th><th>1 día</th><th>1 mes</th><th>3 meses</th><th class="col-pct">Frente a su historia desde 2000</th><th class="col-mini">Último año</th></tr></thead>
-    <tbody>${A.activos.map(a => {
-      const x = escala(0, a.serie.length - 1, 2, 116), y = escala(Math.min(...a.serie), Math.max(...a.serie), 25, 3);
-      return `<tr><th scope="row">${a.nombre}</th><td>${nf(a.decimales).format(a.hoy)}${a.unidad ? ` ${a.unidad}` : ''}</td>${celda(a.d1_pct)}${celda(a.m1_pct)}${celda(a.m3_pct)}
-        <td class="col-pct"><div class="percentil" role="img" aria-label="Más alto que el ${f0.format(a.percentil * 100)} % de los días"><b style="left:${(a.percentil * 100).toFixed(1)}%"></b></div><span class="mini-etq">Más alto que el ${f0.format(a.percentil * 100)} % de los días</span></td>
-        <td class="col-mini"><svg class="chispa" width="120" height="28" viewBox="0 0 120 28" aria-hidden="true"><path d="${camino(a.serie.map((v, i) => [x(i), y(v)]))}"/></svg></td></tr>`;
-    }).join('')}</tbody>`;
-}
 
 // ---------------------------------------------------------------------------
 // Ciclos: variación de cada mes (el único sitio con verde y rojo, porque aquí el signo es el dato)
@@ -2289,7 +2280,6 @@ montarSimulador();
 pintarMercado();
 pintarCiclos();
 pintarCalor();
-pintarTablaMercado();
 pintarCinta();
 pintarTablaTerminal();
 pintarModelo();

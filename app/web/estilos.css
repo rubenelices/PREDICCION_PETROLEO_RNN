@@ -279,6 +279,9 @@ html[data-vista="terminal"] .cab-seccion { padding-top: 18px !important; padding
 .punto-estado.verde { background: var(--verde); } .punto-estado.naranja { background: var(--naranja); } .punto-estado.rojo { background: var(--rojo); }
 .t-rejilla { grid-template-columns: minmax(0, 1fr) 22rem; gap: 12px; align-items: start; }
 .t-ancho { grid-column: 1 / -1; }
+/* lo del mercado (antes una sección de la web) va al final de la terminal */
+.t-mercado { margin-top: 36px; scroll-margin-top: calc(var(--alto-nav, 80px) + 16px); }
+.t-mercado #ciclos { scroll-margin-top: calc(var(--alto-nav, 80px) + 16px); }
 /* la práctica va justo debajo de la gráfica, para jugar viéndola; el lateral ocupa las dos filas */
 .t-rejilla > .t-lado { grid-column: 2; grid-row: 1 / span 2; }
 .t-rejilla > .practica { grid-column: 1; grid-row: 2; }

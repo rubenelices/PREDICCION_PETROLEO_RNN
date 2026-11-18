@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&family=Big+Shoulders+Display:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilos.css?v=20261118f">
+<link rel="stylesheet" href="estilos.css?v=20261118g">
 </head>
 <body>
   <canvas id="crudo-fondo" aria-hidden="true"></canvas>
@@ -25,7 +25,6 @@
       <nav class="secciones" aria-label="Secciones">
         <a href="#panel" aria-current="true">Panel</a>
         <a href="#escenarios">Escenarios</a>
-        <a href="#mercado">Mercado</a>
         <a href="#fiabilidad">Fiabilidad</a>
         <a href="#resultados">Resultados</a>
         <a href="#terminal" class="enlace-terminal">Terminal</a>
@@ -118,33 +117,6 @@
         <div class="tarjeta s6" id="coste"></div>
         <div class="tarjeta s6" id="umbral"></div>
       </div>
-    </section>
-
-    <section class="vista" data-vista="mercado" id="mercado" aria-label="Cómo está el mercado">
-      <div class="titulo-seccion">
-        <h2>Cuatro señales</h2>
-        <p id="mercado-sub"></p>
-      </div>
-      <div class="mercado-lectura" id="mercado-lectura"></div>
-      <div class="rejilla mercado-grid" id="indicadores"></div>
-      <div class="titulo-seccion">
-        <h2>Otros mercados</h2>
-        <p>Cómo se han movido los activos que más influyen en el crudo.</p>
-      </div>
-      <div class="tarjeta"><div class="desplazable"><table class="tabla" id="tabla-mercado" style="margin-top:0"></table></div></div>
-      <div class="titulo-seccion" id="ciclos">
-        <h2>Ciclos del mercado</h2>
-        <p>Los grandes picos y caídas desde 2000 y qué los provocó. Pasa por una tarjeta para ver su tramo en la gráfica.</p>
-      </div>
-      <div class="tarjeta">
-        <div class="grafica" id="g-ciclos"><svg role="img" aria-label="Precio del Brent desde 2000 con sus grandes picos y caídas"></svg><div class="tooltip" hidden></div></div>
-        <ol class="eventos" id="eventos"></ol>
-      </div>
-      <div class="titulo-seccion">
-        <h2>Mes a mes</h2>
-        <p>Cuánto subió o bajó el barril cada mes desde 2000. La última columna es el año completo.</p>
-      </div>
-      <div class="tarjeta"><div class="calor" id="calor" role="img" aria-label="Variación mensual del Brent desde 2000"></div></div>
     </section>
 
     <section class="vista" data-vista="fiabilidad" id="fiabilidad" aria-label="Fiabilidad en el test">
@@ -278,6 +250,29 @@
         </div>
         <div class="tarjeta t-ancho"><h3>Mercados relacionados</h3><div class="desplazable"><table class="tabla" id="t-tabla"></table></div></div>
       </div>
+
+      <!-- el mercado, fuera del modelo: señales, ciclos del crudo y variación mes a mes -->
+      <div class="t-mercado" id="mercado">
+        <div class="titulo-seccion">
+          <h2>Cuatro señales</h2>
+          <p id="mercado-sub"></p>
+        </div>
+        <div class="mercado-lectura" id="mercado-lectura"></div>
+        <div class="rejilla mercado-grid" id="indicadores"></div>
+        <div class="titulo-seccion" id="ciclos">
+          <h2>Ciclos del mercado</h2>
+          <p>Los grandes picos y caídas desde 2000 y qué los provocó. Pasa por una tarjeta para ver su tramo en la gráfica.</p>
+        </div>
+        <div class="tarjeta">
+          <div class="grafica" id="g-ciclos"><svg role="img" aria-label="Precio del Brent desde 2000 con sus grandes picos y caídas"></svg><div class="tooltip" hidden></div></div>
+          <ol class="eventos" id="eventos"></ol>
+        </div>
+        <div class="titulo-seccion">
+          <h2>Mes a mes</h2>
+          <p>Cuánto subió o bajó el barril cada mes desde 2000. La última columna es el año completo.</p>
+        </div>
+        <div class="tarjeta"><div class="calor" id="calor" role="img" aria-label="Variación mensual del Brent desde 2000"></div></div>
+      </div>
     </section>
 
   </main>
@@ -331,6 +326,6 @@
   </footer>
 
   <script type="module" src="crudo.js?v=20261116h"></script>
-  <script type="module" src="panel.js?v=20261118d"></script>
+  <script type="module" src="panel.js?v=20261118e"></script>
 </body>
 </html>
