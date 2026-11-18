@@ -1099,6 +1099,51 @@ function pintarModelo() {
       <p>El rango probable sale de los errores que cometió en los años de validación, y está pensado para acertar 8 de cada 10 veces.</p>
     </li>`;
 }
+// Resumen del test: las tres redes en los tres plazos, frente a no usar modelo (no depende del plazo elegido).
+// En cada celda, el error en dólares (RMSE) y cuánto más o menos se equivoca que sin modelo. La celda dorada es
+// el modelo elegido en cada plazo; si es una versión ajustada, la celda de su red lleva también su error.
+function pintarResumenTest() {
+  const filas = D.comparativa.filas, redes = ['RNN simple', 'LSTM', 'GRU'];
+  const busca = (h, m) => filas.find(f => f.horizonte === h && f.modelo === m);
+  const dif = v => (Math.abs(v) < 0.05 ? '<span class="dif">igual que sin modelo</span>'
+    : `<span class="dif ${v > 0 ? 'mejor' : 'peor'}">${f1.format(Math.abs(v))} % ${v > 0 ? 'menos' : 'más'} error</span>`);
+  const red = m => m.split(', peso')[0];
+  const ajustes = [];
+  const cuerpo = Object.entries(PLAZOS).map(([k, z]) => {
+    const nets = redes.map(r => busca(k, r));
+    const mejor = Math.max(...nets.map(f => f.mejora_pct));
+    const fin = filas.find(f => f.horizonte === k && f.final);
+    const ajustada = fin.modelo !== red(fin.modelo);
+    if (ajustada) ajustes.push({ z, fin });
+    const celdas = nets.map(f => {
+      const elegida = f.modelo === red(fin.modelo);
+      const clases = [f.mejora_pct === mejor ? 'mejor' : '', elegida ? 'elegida' : ''].filter(Boolean).join(' ');
+      // la versión ajustada es la elegida: sus cifras van en grande y las de la red sin ajustar, debajo
+      if (elegida && ajustada) return `<td class="${clases}"><span class="ajuste">Ajustada ×${fin.modelo.split(', peso ')[1]}</span>`
+        + `<span class="rmse">${dolares(fin.rmse)}</span>${dif(fin.mejora_pct)}`
+        + `<span class="sin-ajuste">Sin ajustar: ${dolares(f.rmse)}, ${frente(f.mejora_pct, true)}</span></td>`;
+      return `<td class="${clases}"><span class="rmse">${dolares(f.rmse)}</span>${dif(f.mejora_pct)}</td>`;
+    }).join('');
+    return `<tr><th scope="row">${z.nombre}</th><td><span class="rmse">${dolares(busca(k, 'Ingenuo').rmse)}</span><span class="dif">referencia</span></td>${celdas}</tr>`;
+  }).join('');
+  const notaAjuste = ajustes.map(({ z, fin }) => {
+    const peso = parseFloat(fin.modelo.split(', peso ')[1].replace(',', '.'));
+    return `<br>A ${z.corto.replace(/^a /, '')} elegimos la ${red(fin.modelo)} ajustada, que rebaja un ${f0.format((1 - peso) * 100)} % el cambio que predice (si la red dice +10 %, se usa +${f0.format(peso * 10)} %). `
+      + `Lo marcaba una regla fijada antes del test: en este plazo, frenar las tres redes bajaba su error medio en validación, así que se usan frenadas, cada una con el peso que mejor le iba. A la ${red(fin.modelo)} le tocó ${fin.modelo.split(', peso ')[1]}.`;
+  }).join('');
+  $('lab-resumen').innerHTML = `
+    <h3>Las tres redes en los tres plazos</h3>
+    <p class="ayuda">Error de cada red en el test (${new Date(D.estado.inicio_test).getFullYear()}-2026), medido con el RMSE en dólares por barril, y cuánto más o menos se equivoca que sin modelo, es decir, suponiendo que el precio no cambia. En negrita, la mejor red de cada plazo en el test; en dorado, la elegida.</p>
+    <div class="desplazable">
+      <table class="tabla tabla-test">
+        <thead><tr><th>Plazo</th><th>Sin modelo</th>${redes.map(r => `<th>${r}</th>`).join('')}</tr></thead>
+        <tbody>${cuerpo}</tbody>
+      </table>
+    </div>
+    <p class="nota-eleccion"><i aria-hidden="true"></i><span>Cada red dorada se eligió antes de mirar el test, por ser la que menos se equivocó en validación (2019-2023): así el test es una prueba limpia, aunque no siempre coincida con la mejor.${notaAjuste}</span></p>
+    <p class="nota-tabla">Ninguna red mejora a no usar modelo de forma estadísticamente significativa (Diebold-Mariano, p > 0,05).</p>`;
+}
+
 function pintarComparacion() {
   const z = PLAZOS[estado.plazo];
   const filas = D.comparativa.filas.filter(f => f.horizonte === estado.plazo);
@@ -2135,6 +2180,7 @@ pintarCabecera();
 pintarPlazos();
 pintarOleoducto();
 pintarResultados();
+pintarResumenTest();
 // «Ver el detalle» baja al primer bloque sin cambiar de vista
 $('resumen').addEventListener('click', ev => { const b = ev.target.closest('[data-plazo]'); if (b) elegir(b.dataset.plazo); });
 montarCoste();
