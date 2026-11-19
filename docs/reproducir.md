@@ -49,25 +49,28 @@ Los tests comprueban, entre otras cosas, que no haya fugas de información del f
 ## Estructura del repositorio
 
 ```
+├── .github/workflows/        actualizar_datos.yml: datos de la web cada día (GitHub Actions)
 ├── app/                      Aplicación web
 │   ├── servidor.py           FastAPI: sirve la web y los endpoints /api/*
 │   ├── generar_datos.py      Escribe los JSON que lee la web
 │   ├── modelos/              Redes entrenadas con todos los datos (.pt) y su especificación
-│   ├── web/                  Panel, historia 3D y datos (JSON)
-│   ├── Dockerfile            Imagen para Hugging Face Spaces
-│   └── requirements.txt      Dependencias del Space (PyTorch para CPU)
+│   ├── web/                  La web publicada en Vercel: panel, historia 3D y datos (JSON)
+│   ├── Dockerfile            Imagen alternativa para servirla con Docker
+│   └── requirements.txt      Dependencias de la app y del workflow (PyTorch para CPU)
 ├── docs/
 │   ├── metodologia.md        Cómo se hizo: datos, validación, rondas e intervalo
 │   ├── resultados.md         Resultados del test y conclusiones
 │   ├── aplicacion.md         Qué ofrece la web y cómo ejecutarla
 │   ├── reproducir.md         Esta página
+│   ├── presentacion.pdf      La presentación de cinco diapositivas
 │   ├── assignment/           Enunciado
 │   └── img/                  Figuras del README
-├── notebooks/                01-08, del ETL a la comparativa final
+├── notebooks/                01-09, del ETL a la comparativa final y el seguimiento
 ├── reports/
 │   ├── results/ronda_N/      Validación, decisiones, test, intervalo y curvas
+│   ├── seguimiento/          Previsión de cada día con datos nuevos (previsiones.csv)
 │   └── tuning/ronda_N/       Estudios de Optuna y mejores configuraciones
-├── scripts/                  Descarga, búsqueda, entrenamiento, intervalo, app y figuras
+├── scripts/                  Descarga, búsqueda, entrenamiento, intervalo, app, actualización diaria y figuras
 ├── src/oil_forecast/         Paquete con todo el código reutilizable
 │   ├── data.py               Descarga y limpieza
 │   ├── features.py           Variables y escalado sin fugas

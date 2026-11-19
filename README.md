@@ -9,6 +9,7 @@
   <a href="docs/resultados.md"><img src="https://img.shields.io/badge/Resultados-3E7A4A?style=for-the-badge&logo=pytorch&logoColor=white" alt="Resultados"></a>
   <a href="docs/aplicacion.md"><img src="https://img.shields.io/badge/Gu%C3%ADa%20de%20la%20web-8A4B2E?style=for-the-badge&logo=fastapi&logoColor=white" alt="Guía de la web"></a>
   <a href="docs/reproducir.md"><img src="https://img.shields.io/badge/Reproducirlo-4A4F57?style=for-the-badge&logo=python&logoColor=white" alt="Reproducirlo"></a>
+  <a href="docs/presentacion.pdf"><img src="https://img.shields.io/badge/Presentaci%C3%B3n-B5562B?style=for-the-badge&logo=googleslides&logoColor=white" alt="Presentación"></a>
 </p>
 
 <p align="center">
@@ -28,7 +29,7 @@
 
 Caso práctico de Aprendizaje Automático: comparación de tres redes neuronales recurrentes (**RNN simple, LSTM y GRU**) para predecir el precio del Brent a **1 semana (5 días hábiles), 3 meses (63) y 1 año (252)**, e integración del modelo final en una **aplicación web** que da la previsión, su **intervalo del 80 %** y una explicación en lenguaje sencillo de lo fiable que es.
 
-El enunciado completo está en [`docs/assignment/ENUNCIADO.pdf`](docs/assignment/ENUNCIADO.pdf).
+El enunciado completo está en [`docs/assignment/ENUNCIADO.pdf`](docs/assignment/ENUNCIADO.pdf). La presentación de la aplicación está en [`docs/presentacion.pdf`](docs/presentacion.pdf).
 
 ## Resultados
 
@@ -93,3 +94,4 @@ Eso abre la aplicación en <http://localhost:7860> con los modelos ya entrenados
 | [Resultados](docs/resultados.md) | Tabla comparativa del test, R², el modelo final frente a la realidad, conclusiones y limitaciones |
 | [Guía de la web](docs/aplicacion.md) | Qué ofrece cada página de la web, cómo está montada, cómo se publica en Vercel y cómo se actualiza cada día |
 | [Reproducirlo](docs/reproducir.md) | Los diez pasos del trabajo, tests y estructura del repositorio |
+| [Presentación](docs/presentacion.pdf) | Las cinco diapositivas: problema y oportunidad, solución, comparativa de las tres redes, demostración y propuesta de valor |
