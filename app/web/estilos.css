@@ -261,8 +261,13 @@ svg text.etq-umbral { fill: var(--ambar); font-weight: 700; }
 .linea-cero { stroke: rgba(242, 234, 221, .3); }
 
 /* terminal: más densa, cifras tabulares y colores de mercado (solo aquí) */
-.enlace-terminal { display: inline-flex; align-items: center; gap: 6px; }
-.enlace-terminal::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--ambar); }
+/* la terminal, destacada en la barra: pastilla ámbar con su icono, separada del recorrido */
+.secciones a.enlace-terminal { display: inline-flex; align-items: center; gap: 7px; margin-left: 6px; color: var(--ambar); background: rgba(243, 180, 65, .12); box-shadow: inset 0 0 0 1px rgba(243, 180, 65, .5); }
+.secciones a.enlace-terminal:hover { color: #ffd98a; background: rgba(243, 180, 65, .2); }
+.secciones a.enlace-terminal[aria-current="true"] { color: var(--crudo); background: linear-gradient(180deg, #ffd98a 0%, var(--ambar) 100%); box-shadow: 0 4px 18px rgba(243, 180, 65, .3); }
+.ico-terminal { flex: none; }
+.boton-terminal .ico-terminal { margin-left: -4px; }
+.boton-oro:hover .ico-terminal { transform: none; }
 html[data-vista="terminal"] .cab-seccion { padding-top: 18px !important; padding-bottom: 16px !important; }
 .terminal { --pos: #6fb3a8; --neg: #e0704f; --comp: #8fb8c9; font-variant-numeric: tabular-nums; }
 .terminal .sube { color: var(--pos); } .terminal .baja { color: var(--neg); }
