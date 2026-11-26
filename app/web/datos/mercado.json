@@ -1,18 +1,17 @@
 {
- "fecha_dato": "2026-11-17",
- "desde": "2025-11-21",
+ "fecha_dato": "2026-11-24",
+ "desde": "2025-11-28",
  "indicadores": [
   {
    "nombre": "Agitación del Brent",
    "unidad": "%",
    "decimales": 0,
    "texto": "Cuánto se mueve el precio cada día, en ritmo anual",
-   "hoy": 84.4128,
-   "mediana_historica": 31.6158,
-   "percentil": 0.971,
-   "hace_3m": 83.498,
+   "hoy": 78.9989,
+   "mediana_historica": 31.646,
+   "percentil": 0.96,
+   "hace_3m": 70.2484,
    "serie": [
-    23.5597,
     25.4903,
     24.3317,
     23.2079,
@@ -64,7 +63,8 @@
     79.6537,
     81.2261,
     85.7106,
-    84.4128
+    79.9211,
+    78.9989
    ]
   },
   {
@@ -72,12 +72,11 @@
    "unidad": "",
    "decimales": 1,
    "texto": "Nervios en los mercados de acciones de EE. UU.",
-   "hoy": 25.46,
-   "mediana_historica": 17.57,
-   "percentil": 0.828,
-   "hace_3m": 15.19,
+   "hoy": 26.36,
+   "mediana_historica": 17.58,
+   "percentil": 0.853,
+   "hace_3m": 15.85,
    "serie": [
-    23.43,
     16.35,
     15.41,
     15.74,
@@ -129,7 +128,8 @@
     19.42,
     25.64,
     19.3,
-    25.46
+    35.89,
+    26.36
    ]
   },
   {
@@ -137,12 +137,11 @@
    "unidad": "$",
    "decimales": 3,
    "texto": "Dólares por cada euro; el crudo se paga en dólares",
-   "hoy": 1.1034,
-   "mediana_historica": 1.1742,
-   "percentil": 0.276,
-   "hace_3m": 1.1591,
+   "hoy": 1.0981,
+   "mediana_historica": 1.1741,
+   "percentil": 0.259,
+   "hace_3m": 1.1665,
    "serie": [
-    1.1506,
     1.16,
     1.1635,
     1.1731,
@@ -194,7 +193,8 @@
     1.1163,
     1.1154,
     1.1034,
-    1.1034
+    1.0981,
+    1.0981
    ]
   },
   {
@@ -202,12 +202,11 @@
    "unidad": "$",
    "decimales": 2,
    "texto": "Diferencia con el crudo de referencia de EE. UU.",
-   "hoy": 3.41,
+   "hoy": 9.56,
    "mediana_historica": 2.49,
-   "percentil": 0.584,
-   "hace_3m": 6.39,
+   "percentil": 0.879,
+   "hace_3m": 6.37,
    "serie": [
-    3.92,
     5.49,
     4.19,
     4.5,
@@ -259,7 +258,8 @@
     12.59,
     3.46,
     3.21,
-    3.41
+    5.17,
+    9.56
    ]
   }
  ]

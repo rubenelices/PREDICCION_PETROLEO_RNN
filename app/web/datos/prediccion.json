@@ -1,17 +1,17 @@
 {
  "modelo": "LSTM a 1 semana y 1 año · RNN simple a 3 meses",
- "fecha_dato": "2026-11-17",
- "precio_hoy": 92.94,
- "precio_anterior": 92.9,
+ "fecha_dato": "2026-11-24",
+ "precio_hoy": 91.8,
+ "precio_anterior": 91.2,
  "horizontes": {
   "corto": {
    "dias_habiles": 5,
-   "fecha_objetivo": "2026-11-24",
-   "precio": 92.12,
-   "variacion_pct": -0.88,
+   "fecha_objetivo": "2026-12-01",
+   "precio": 91.06,
+   "variacion_pct": -0.8,
    "rango80": [
-    77.69,
-    107.66
+    77.65,
+    105.37
    ],
    "modelo": "LSTM",
    "red": "LSTM",
@@ -22,12 +22,12 @@
   },
   "medio": {
    "dias_habiles": 63,
-   "fecha_objetivo": "2027-02-12",
-   "precio": 91.79,
-   "variacion_pct": -1.24,
+   "fecha_objetivo": "2027-02-19",
+   "precio": 93.36,
+   "variacion_pct": 1.7,
    "rango80": [
-    75.24,
-    117.28
+    74.32,
+    115.84
    ],
    "modelo": "RNN simple ajustada",
    "red": "RNN simple",
@@ -38,12 +38,12 @@
   },
   "largo": {
    "dias_habiles": 252,
-   "fecha_objetivo": "2027-11-04",
-   "precio": 100.28,
-   "variacion_pct": 7.89,
+   "fecha_objetivo": "2027-11-11",
+   "precio": 98.97,
+   "variacion_pct": 7.81,
    "rango80": [
-    55.51,
-    153.75
+    54.83,
+    151.86
    ],
    "modelo": "LSTM",
    "red": "LSTM",
@@ -55,19 +55,19 @@
  },
  "redes": {
   "RNN simple": {
-   "corto": 92.29,
-   "medio": 91.66,
-   "largo": 94.6
+   "corto": 92.36,
+   "medio": 93.54,
+   "largo": 92.87
   },
   "LSTM": {
-   "corto": 92.12,
-   "medio": 92.42,
-   "largo": 100.28
+   "corto": 91.06,
+   "medio": 92.44,
+   "largo": 98.97
   },
   "GRU": {
-   "corto": 91.67,
-   "medio": 94.18,
-   "largo": 102.1
+   "corto": 91.47,
+   "medio": 93.7,
+   "largo": 101.09
   }
  }
 }
